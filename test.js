@@ -167,6 +167,26 @@ function totalfiles(next) {
     ], next);
 }
 
+function shorthandperiod(next) {
+    var name = 'testlogs/' + 'shorthandperiod';
+
+    async.series([
+        function (next) { rmdir(name, ignoreMissing(next)); },
+        function (next) { fx.mkdir(name, next); },
+        function (next) { runTest (name, {
+            stream: { path: name + '/test.log', period: 'hourly'},
+            batch: { iterations: 100 }
+        }, next); },
+        function (next) {
+            var files = fs.readdirSync(name);
+            assert.equal(1, files.length);
+            console.log(name, 'passed');
+            next();
+        },
+        function (next) { rmdir(name, next); }
+    ], next);
+}
+
 
 async.parallel([
     basicthreshold,
@@ -174,6 +194,7 @@ async.parallel([
     gzippedfiles,
     totalsize,
     totalfiles,
+    shorthandperiod
 ], function (err) {
     if (err) console.log(err);
 });
