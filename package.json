@@ -1,0 +1,32 @@
+{
+  "name": "bunyan-rotating-file-stream",
+  "version": "1.0.4",
+  "description": "a rotating file stream for the bunyan logging system",
+  "author": "Jim Tupper <npm@tupper.org.uk> (http://github.com/rcomian)",
+  "main": "./lib/rotatingfilestream/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Rcomian/bunyan-rotating-file-store.git"
+  },
+  "engines": [
+    "node >=0.10.0"
+  ],
+  "keywords": [
+    "log",
+    "logging",
+    "log4j",
+    "json",
+    "bunyan",
+    "rotating",
+    "rotate"
+  ],
+  "license": "MIT",
+  "optionalDependencies": {},
+  "devDependencies": {},
+  "dependencies": {
+    "async": "^1.5.2",
+    "bunyan": "^1.5.1",
+    "lodash": "^4.2.1",
+    "safe-json-stringify": "~1"
+  }
+}
