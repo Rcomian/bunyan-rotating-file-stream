@@ -1,11 +1,11 @@
 var bunyan = require('bunyan');
-var RotatingFileStream = require('./lib/rotatingfilestream');
+var RotatingFileStream = require('./index');
 
 var log = bunyan.createLogger({
     name: 'foo',
     streams: [{
         type: 'raw',
-        stream: new RotatingFileStream({
+        stream: RotatingFileStream({
             path: 'foo.log',
             period: '1h',
             threshold: '1m',
