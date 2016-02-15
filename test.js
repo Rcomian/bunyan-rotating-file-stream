@@ -7,7 +7,7 @@ var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
 
-function runTest(options, next) {
+function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
 
     var log = bunyan.createLogger({
@@ -18,6 +18,12 @@ function runTest(options, next) {
         }]
     });
 
+    rfs.on('losingdata', function () {
+        if (ia) clearInterval(ia);
+        if (maintimer) clearTimeout(maintimer);
+
+        next('Losing data - abandon test: ' + name);
+    });
 
     var i = 0;
     var batch = _.extend({}, { size: 8 }, options.batch);
@@ -29,6 +35,7 @@ function runTest(options, next) {
 
             if (typeof (batch.iterations) !== 'undefined' && i >= batch.iterations) {
                 clearInterval(ia);
+                ia = null;
                 rfs.destroy();
                 next();
                 return;
@@ -36,8 +43,10 @@ function runTest(options, next) {
         }
     }, 0);
 
+    var maintimer = null;
+
     if (typeof (batch.duration) !== 'undefined') {
-        setTimeout(function ()
+        maintimer = setTimeout(function ()
         {
             clearInterval(ia);
             rfs.destroy();
@@ -63,7 +72,7 @@ function basicthreshold(next) {
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
-        function (next) { runTest ({
+        function (next) { runTest (name, {
             stream: { path: name + '/test.log', threshold: '1m' },
             batch: { iterations: 100000 }
         }, next); },
@@ -83,7 +92,7 @@ function timerotation(next) {
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
-        function (next) { runTest ({
+        function (next) { runTest (name, {
             stream: { path: name + '/test.log', period: '1000ms' },
             batch: { duration: 9500 }
         }, next); },
@@ -103,7 +112,7 @@ function gzippedfiles(next) {
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
-        function (next) { runTest ({
+        function (next) { runTest (name, {
             stream: { path: name + '/test.log', threshold: '1m', gzip: true },
             batch: { iterations: 100000 }
         }, next); },
@@ -124,7 +133,7 @@ function totalsize(next) {
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
-        function (next) { runTest ({
+        function (next) { runTest (name, {
             stream: { path: name + '/test.log', threshold: '1m', totalSize: '10m' },
             batch: { iterations: 100000 }
         }, next); },
@@ -144,7 +153,7 @@ function totalfiles(next) {
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
-        function (next) { runTest ({
+        function (next) { runTest (name, {
             stream: { path: name + '/test.log', threshold: '1m', totalFiles: 5 },
             batch: { iterations: 100000 }
         }, next); },
