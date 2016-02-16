@@ -2,6 +2,10 @@
 
 Known issues:
 
+## 1.1.0
+
+- Adding ability to rotate existing log files when we open them up with the "rotateExisting" feature.
+
 ## 1.0.6
 
 - Fixing special values (eg, 'hourly') for period rollover. These were broken in v1.0.5

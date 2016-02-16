@@ -6,6 +6,8 @@ var fx = require('mkdir-recursive');
 var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
+var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
+var whyRunning = require('why-is-node-running')
 
 function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
@@ -82,7 +84,7 @@ function basicthreshold(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
@@ -102,7 +104,7 @@ function timerotation(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
@@ -123,7 +125,7 @@ function gzippedfiles(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
@@ -143,7 +145,7 @@ function totalsize(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
@@ -163,7 +165,7 @@ function totalfiles(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
@@ -183,10 +185,47 @@ function shorthandperiod(next) {
             console.log(name, 'passed');
             next();
         },
-        function (next) { rmdir(name, next); }
+        function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
+function checkrotationofoldfile(next) {
+    var name = 'testlogs/' + 'checkrotationofoldfile';
+
+    var periodtrigger = InitialPeriodRotateTrigger({ period: '1h' });
+
+    var rotations = 0;
+    periodtrigger.on('rotate', function () {
+        rotations += 1;
+    });
+
+    periodtrigger.checkIfRotationNeeded(Date.now() - (10000 * 60 * 60 * 3));
+
+    setTimeout(function () {
+        assert.equal(1, rotations);
+        console.log(name, 'passed');
+        next();
+    }, 1000);
+}
+
+function checkrotationofnewfile(next) {
+    var name = 'testlogs/' + 'checkrotationofnewfile';
+
+    var periodtrigger = InitialPeriodRotateTrigger({ period: '1h' });
+
+    var rotations = 0;
+    periodtrigger.on('rotate', function () {
+        rotations += 1;
+    });
+
+    periodtrigger.checkIfRotationNeeded(Date.now() - (3));
+
+    setTimeout(function () {
+        assert.equal(0, rotations);
+        console.log(name, 'passed');
+        next();
+    }, 1000);
+}
 
 async.parallel([
     basicthreshold,
@@ -194,7 +233,16 @@ async.parallel([
     gzippedfiles,
     totalsize,
     totalfiles,
-    shorthandperiod
+    shorthandperiod,
+    checkrotationofoldfile,
+    checkrotationofnewfile
 ], function (err) {
     if (err) console.log(err);
 });
+
+var totalTimeout = setTimeout(function () {
+    console.log('Still running: ');
+    whyRunning();
+}, 20000);
+
+totalTimeout.unref();

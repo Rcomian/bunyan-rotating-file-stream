@@ -107,6 +107,15 @@ the scope: top of the hour (h), midnight (d), start of Sunday (w), start of the
 1st of the month (m), start of Jan 1st (y).</td>
 </tr>
 <tr>
+<td>rotateExisting</td>
+<td>No</td>
+<td>false</td>
+<td>If period is also set, will rotate an existing log file when the process
+starts up if that file would have been rotated due to its age. This means that
+if you want a new file every day, and the process isn't running overnight,
+when you start up the next day you'll get a new file anyway.</td>
+</tr>
+<tr>
 <td>threshold</td>
 <td>No</td>
 <td>0</td>
