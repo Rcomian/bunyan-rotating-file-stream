@@ -28,7 +28,7 @@ function runTest(name, options, next) {
     });
 
     var i = 0;
-    var batch = _.extend({}, { size: 8 }, options.batch);
+    var batch = _.extend({}, { size: 100 }, options.batch);
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
@@ -38,8 +38,10 @@ function runTest(name, options, next) {
             if (typeof (batch.iterations) !== 'undefined' && i >= batch.iterations) {
                 clearInterval(ia);
                 ia = null;
-                rfs.destroy();
-                next();
+                rfs.join(function () {
+                    rfs.destroy();
+                    next();
+                });
                 return;
             }
         }
