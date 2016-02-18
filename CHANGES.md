@@ -2,6 +2,11 @@
 
 Known issues:
 
+## 1.1.1
+
+- Being far more aggressive when writing logs in order to improve log writing speed
+- Basic performance test that writes 1million logs
+
 ## 1.1.0
 
 - Adding ability to rotate existing log files when we open them up with the "rotateExisting" feature.
