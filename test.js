@@ -52,7 +52,7 @@ function runTest(name, options, next) {
                 return;
             }
         }
-    }, options.interval || 0);
+    }, 0);
 
     var maintimer = null;
 
@@ -206,13 +206,12 @@ function multiplerotatorsonsamefile(next) {
         function (next) { fx.mkdir(name, next); },
         function (next) {
             runTest (name, {
-                stream: { path: name + '/test.log', period: '1000ms' },
-                batch: { duration: 9500 },
-                interval: 100
+                stream: { path: name + '/test.log', period: '1000ms', shared: true },
+                batch: { duration: 9500 }
             }, next);
 
             // Setup the second rotator
-            RotatingFileStream({ path: name + '/test.log', period: '1000ms' });
+            RotatingFileStream({ path: name + '/test.log', period: '1000ms', shared: true });
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -365,21 +364,3 @@ var totalTimeout = setTimeout(function () {
         whyRunning();
     }
 }, 20000);
-
-
-var rfs = RotatingFileStream({ path: 'foo.log' });
-
-var log = bunyan.createLogger({
-    name: 'foo',
-    level: 'error',
-    streams: [{
-        stream: rfs
-    }]
-});
-
-
-var childlog = log.child({level: 'info'});
-
-log.info('should not appear');
-
-childlog.info('should appear');
