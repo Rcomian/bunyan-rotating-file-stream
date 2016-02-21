@@ -101,6 +101,7 @@ async.parallel([
     throughput
 ], function (err) {
     if (err) console.log(err);
+    clearTimeout(totalTimeout);
 });
 
 var totalTimeout = setTimeout(function () {
