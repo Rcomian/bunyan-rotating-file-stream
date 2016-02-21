@@ -1,7 +1,5 @@
 # bunyan Changelog
 
-Known issues:
-
 ## 1.2.0
 
 - Support non-raw streams. For some reason, raw streams are MUCH faster in high load scenarios (at least when this is the only stream).
