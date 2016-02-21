@@ -7,6 +7,8 @@ var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
+var setLongTimeout = require('./lib/setlongtimeout');
+
 var whyRunning;
 
 try {
@@ -234,6 +236,81 @@ function checkrotationofnewfile(next) {
     }, 1000);
 }
 
+function checksetlongtimeout(next) {
+    var name = 'testlogs/' + 'checksetlongtimeout';
+
+    var d = new Date();
+    d.setSeconds(d.getSeconds() + 10);
+
+    var calls = 0;
+    var longtimeout = setLongTimeout(d.getTime(), true, function () {
+        clearTimeout(catchall);
+        calls += 1;
+
+        if (calls > 1) {
+            console.log('Called multiple times when expecting one!', calls);
+        } else {
+            console.log(name, 'passed');
+            next();
+        }
+    }, 100);
+
+    var catchall = setTimeout(function () {
+        console.log(name, 'FAILED: Timer did not fire');
+        if (longtimeout) {
+            longtimeout.clear();
+        }
+    }, 15000);
+}
+
+function checksetlongtimeoutclear() {
+    var name = 'testlogs/' + 'checksetlongtimeoutclear';
+
+    var d = new Date();
+    d.setSeconds(d.getSeconds() + 10);
+
+    var calls = 0;
+    var longtimeout = setLongTimeout(d.getTime(), true, function () {
+        calls += 1;
+    }, 100);
+
+    setTimeout(function () {
+        longtimeout.clear();
+    }, 5000);
+
+    setTimeout(function () {
+        if (calls === 0) {
+            console.log(name, 'passed');
+        } else {
+            console.log(name, 'FAILED: Timer fired even when it was cleared');
+        }
+    }, 11000);
+}
+
+function checksetlongtimeoutclearnormalperiods() {
+    var name = 'testlogs/' + 'checksetlongtimeoutclearnormalperiods';
+
+    var d = new Date();
+    d.setSeconds(d.getSeconds() + 10);
+
+    var calls = 0;
+    var longtimeout = setLongTimeout(d.getTime(), true, function () {
+        calls += 1;
+    });
+
+    setTimeout(function () {
+        longtimeout.clear();
+    }, 5000);
+
+    setTimeout(function () {
+        if (calls === 0) {
+            console.log(name, 'passed');
+        } else {
+            console.log(name, 'FAILED: Timer fired even when it was cleared');
+        }
+    }, 11000);
+}
+
 async.parallel([
     basicthreshold,
     timerotation,
@@ -242,7 +319,10 @@ async.parallel([
     totalfiles,
     shorthandperiod,
     checkrotationofoldfile,
-    checkrotationofnewfile
+    checkrotationofnewfile,
+    checksetlongtimeout,
+    checksetlongtimeoutclear,
+    checksetlongtimeoutclearnormalperiods
 ], function (err) {
     if (err) console.log(err);
 
