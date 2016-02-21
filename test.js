@@ -7,7 +7,13 @@ var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
-var whyRunning = require('why-is-node-running')
+var whyRunning;
+
+try {
+    var whyRunning = require('why-is-node-running');
+} catch (e) {
+    console.log('"Why is node running" disabled');
+}
 
 function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
@@ -28,7 +34,7 @@ function runTest(name, options, next) {
     });
 
     var i = 0;
-    var batch = _.extend({}, { size: 100 }, options.batch);
+    var batch = _.extend({}, { size: 10 }, options.batch);
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
@@ -240,11 +246,13 @@ async.parallel([
     checkrotationofnewfile
 ], function (err) {
     if (err) console.log(err);
+
+    clearTimeout(totalTimeout);
 });
 
 var totalTimeout = setTimeout(function () {
     console.log('Still running: ');
-    whyRunning();
+    if (whyRunning) {
+        whyRunning();
+    }
 }, 20000);
-
-totalTimeout.unref();
