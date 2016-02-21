@@ -257,13 +257,14 @@ function checksetlongtimeout(next) {
 
     var catchall = setTimeout(function () {
         console.log(name, 'FAILED: Timer did not fire');
+        next('FAILED: Timer did not fire');
         if (longtimeout) {
             longtimeout.clear();
         }
     }, 15000);
 }
 
-function checksetlongtimeoutclear() {
+function checksetlongtimeoutclear(next) {
     var name = 'testlogs/' + 'checksetlongtimeoutclear';
 
     var d = new Date();
@@ -281,13 +282,14 @@ function checksetlongtimeoutclear() {
     setTimeout(function () {
         if (calls === 0) {
             console.log(name, 'passed');
+            next();
         } else {
             console.log(name, 'FAILED: Timer fired even when it was cleared');
         }
     }, 11000);
 }
 
-function checksetlongtimeoutclearnormalperiods() {
+function checksetlongtimeoutclearnormalperiods(next) {
     var name = 'testlogs/' + 'checksetlongtimeoutclearnormalperiods';
 
     var d = new Date();
@@ -304,6 +306,7 @@ function checksetlongtimeoutclearnormalperiods() {
 
     setTimeout(function () {
         if (calls === 0) {
+            next();
             console.log(name, 'passed');
         } else {
             console.log(name, 'FAILED: Timer fired even when it was cleared');

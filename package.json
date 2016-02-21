@@ -23,9 +23,9 @@
   "license": "MIT",
   "optionalDependencies": {},
   "devDependencies": {
-      "mkdir-recursive": "^0.2.1",
-      "rmdir": "^1.1.0",
-      "why-is-node-running": "^1.2.1"
+    "mkdir-recursive": "^0.2.1",
+    "rmdir": "^1.1.0",
+    "why-is-node-running": "^1.2.1"
   },
   "dependencies": {
     "async": "^1.5.2",
