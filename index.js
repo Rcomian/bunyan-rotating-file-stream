@@ -1,14 +1,14 @@
 // Utility to orchestrate the rotating file system object and its triggers.
 'use strict';
 
-var RotatingFileStream = require('./lib/rotatingfilestream');
+var DedupeRotatingFileStream = require('./lib/deduperotatingfilestream');
 var PeriodTrigger = require('./lib/periodtrigger');
 var InitialPeriodTrigger = require('./lib/initialperiodtrigger');
 var ThresholdTrigger = require('./lib/thresholdtrigger');
 var TriggerAdapter = require('./lib/triggeradapter');
 
 function RotatingFileStreamFactory(options) {
-    var rfs = RotatingFileStream(options);
+    var rfs = DedupeRotatingFileStream(options);
 
     if (options.period) {
         var periodTrigger = PeriodTrigger(options);

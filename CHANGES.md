@@ -1,5 +1,9 @@
 # bunyan Changelog
 
+## 1.3.0
+
+- It appears to be a very common problem that multiple rotating file streams are created against the same file. This version should resolve this issue when done within the same process by caching and returning the first rotating stream created.
+
 ## 1.2.1
 
 - Catching write errors and emitting them

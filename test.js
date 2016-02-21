@@ -52,7 +52,7 @@ function runTest(name, options, next) {
                 return;
             }
         }
-    }, 0);
+    }, options.interval || 0);
 
     var maintimer = null;
 
@@ -198,6 +198,32 @@ function shorthandperiod(next) {
     ], next);
 }
 
+function multiplerotatorsonsamefile(next) {
+    var name = 'testlogs/' + 'multiplerotatorsonsamefile';
+
+    async.series([
+        function (next) { rmdir(name, ignoreMissing(next)); },
+        function (next) { fx.mkdir(name, next); },
+        function (next) {
+            runTest (name, {
+                stream: { path: name + '/test.log', period: '1000ms' },
+                batch: { duration: 9500 },
+                interval: 100
+            }, next);
+
+            // Setup the second rotator
+            RotatingFileStream({ path: name + '/test.log', period: '1000ms' });
+        },
+        function (next) {
+            var files = fs.readdirSync(name);
+            assert.equal(10, files.length);
+            console.log(name, 'passed');
+            next();
+        },
+        function (next) { rmdir(name, ignoreMissing(next)); }
+    ], next);
+}
+
 function checkrotationofoldfile(next) {
     var name = 'testlogs/' + 'checkrotationofoldfile';
 
@@ -325,7 +351,8 @@ async.parallel([
     checkrotationofnewfile,
     checksetlongtimeout,
     checksetlongtimeoutclear,
-    checksetlongtimeoutclearnormalperiods
+    checksetlongtimeoutclearnormalperiods,
+    multiplerotatorsonsamefile
 ], function (err) {
     if (err) console.log(err);
 
@@ -338,3 +365,21 @@ var totalTimeout = setTimeout(function () {
         whyRunning();
     }
 }, 20000);
+
+
+var rfs = RotatingFileStream({ path: 'foo.log' });
+
+var log = bunyan.createLogger({
+    name: 'foo',
+    level: 'error',
+    streams: [{
+        stream: rfs
+    }]
+});
+
+
+var childlog = log.child({level: 'info'});
+
+log.info('should not appear');
+
+childlog.info('should appear');
