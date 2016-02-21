@@ -10,8 +10,8 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
                 period: '1d',          // daily rotation
                 totalFiles: 10,        // keep up to 10 back copies
                 rotateExisting: true,  // Give ourselves a clean file when we start up, based on period
-                threshold: 10m,        // Rotate log files larger than 10 megabytes
-                totalSize: 20m,        // Don't keep more than 20mb of archived log files
+                threshold: '10m',      // Rotate log files larger than 10 megabytes
+                totalSize: '20m',      // Don't keep more than 20mb of archived log files
                 gzip: true             // Compress the archive log files to save space
             })
         }]
@@ -19,6 +19,15 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
 ```
 
 # Recent changes
+
+## 1.3
+
+It's a very common programming error to accidentally create 2 rotating file streams against the same log file.
+By default, we detect and disallow this option, throwing an exception as it normally means that a mistake has been made.
+If, however, you really want to be able to do this, we can cache the file streams and return the original one
+each time. To do this add `shared: true` to the list of options when creating each file stream.
+
+Either way, it is now not possible to create 2 rotating file streams against the same file.
 
 ## 1.2
 
@@ -86,8 +95,8 @@ under some high-load scenarios but may serialize the json differently to bunyan.
                 period: '1d',          // daily rotation
                 totalFiles: 10,        // keep 10 back copies
                 rotateExisting: true,  // Give ourselves a clean file when we start up, based on period
-                threshold: 10m,        // Rotate log files larger than 10 megabytes
-                totalSize: 20m,        // Don't keep more than 20mb of archived log files
+                threshold: '10m',       // Rotate log files larger than 10 megabytes
+                totalSize: '20m',       // Don't keep more than 20mb of archived log files
                 gzip: true             // Compress the archive log files to save space
             })
         }]
