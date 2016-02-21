@@ -20,7 +20,7 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
 
 # Recent changes
 
-## 1.2.0
+## 1.2
 
 - Support non-raw streams. For some reason, raw streams are MUCH faster in high load scenarios (at least when this is the only stream).
 - Better guarantees over file rollover - we will write exactly one log record that goes over the size threshold before we rotate
@@ -28,6 +28,7 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
   logs could have been written. This made everything unpredictable.
 - Making better use of the cargo datatype to write multiple log records in a single event loop tick.
 - Using setImmediate rather than process.nextTick in the write loop to allow io and other operations time to happen rather than hog the event loop.
+- Other refactorings and minor bug fixes.
 
 # Current Status
 

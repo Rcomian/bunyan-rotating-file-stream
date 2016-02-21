@@ -1,8 +1,10 @@
 # bunyan Changelog
 
-## Next
+## 1.2.1
 
-- Long periods support refactored into its own component.
+- Catching write errors and emitting them
+- Ensuring a stream is closed before finishing a join (internal testing method)
+- Handling events in the underlying stream
 
 ## 1.2.0
 
