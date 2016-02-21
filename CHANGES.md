@@ -2,6 +2,15 @@
 
 Known issues:
 
+## 1.2.0
+
+- Support non-raw streams. For some reason, raw streams are MUCH faster in high load scenarios (at least when this is the only stream).
+- Better guarantees over file rollover - we will write exactly one log record that goes over the size threshold before we rotate
+  The previous performance release meant that we couldn't rotate until the write had completed to the disk - in the meantime several other
+  logs could have been written. This made everything unpredictable.
+- Making better use of the cargo datatype to write multiple log records in a single event loop tick.
+- Using setImmediate rather than process.nextTick in the write loop to allow io and other operations time to happen rather than hog the event loop.
+
 ## 1.1.1
 
 - Being far more aggressive when writing logs in order to improve log writing speed
