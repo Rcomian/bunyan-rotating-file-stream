@@ -21,7 +21,6 @@ function runTest(name, options, next) {
     var log = bunyan.createLogger({
         name: 'foo',
         streams: [{
-            type: 'raw',
             stream: rfs
         }]
     });
