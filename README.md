@@ -20,6 +20,8 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
 
 # Recent changes
 
+[![Join the chat at https://gitter.im/Rcomian/bunyan-rotating-file-stream](https://badges.gitter.im/Rcomian/bunyan-rotating-file-stream.svg)](https://gitter.im/Rcomian/bunyan-rotating-file-stream?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## 1.3
 
 It's a very common programming error to accidentally create 2 rotating file streams against the same log file.
