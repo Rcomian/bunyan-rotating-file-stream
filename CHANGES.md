@@ -1,5 +1,10 @@
 # bunyan Changelog
 
+## 1.3.1
+
+- Fix bug: If we started rotating files in the middle of a write batch, the remaining logs in the batch would be reversed.
+- Start rotating if a log record would breach a threshold rather than rotate after threshold reached.
+
 ## 1.3.0
 
 - It appears to be a very common problem that multiple rotating file streams are created against the same file. This version should resolve this issue when done within the same process by caching and returning the first rotating stream created.
