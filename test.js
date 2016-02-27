@@ -38,7 +38,7 @@ function runTest(name, options, next) {
         next('Losing data - abandon test: ' + name);
     });
 
-    var i = 0;
+    var i = 1;
     var batch = _.extend({}, { size: 10 }, options.batch);
 
     var ia = setInterval(function () {
@@ -71,14 +71,20 @@ function runTest(name, options, next) {
     }
 }
 
-function checkFileConsistency(directory, next) {
+function checkFileConsistency(directory, opts, next) {
+
+    if (typeof (opts) === 'function') {
+        next = opts;
+        opts = {};
+    }
+
     fs.readdir(directory, function (err, files) {
         async.sortBy(files, function (file, callback) {
             fs.stat(path.join(directory, file), function (err, stats) {
                 callback(err, stats.mtime);
             });
         }, function (err, results){
-            var nextExpectedId = null;
+            var nextExpectedId = opts.first || null;
 
             async.forEachSeries(results, function (file, next) {
                 var fullpath = path.join(directory, file);
@@ -99,7 +105,7 @@ function checkFileConsistency(directory, next) {
                     if (nextExpectedId === null) {
                         nextExpectedId = log.i + 1;
                     } else {
-                        assert.equal(nextExpectedId, log.i, fullpath);
+                        assert.equal(nextExpectedId, log.i, fullpath + ' - expected: ' + nextExpectedId + ', got: ' + log.i);
                         nextExpectedId += 1;
                     }
                 });
@@ -108,6 +114,11 @@ function checkFileConsistency(directory, next) {
                     next();
                 });
             }, function done(err) {
+
+                if (opts.last) {
+                    assert.equal(opts.last, nextExpectedId, 'last expected: ' + opts.last + ', got: ' + nextExpectedId);
+                }
+
                 next(err);
             });
         });
@@ -135,7 +146,7 @@ function basicthreshold(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -158,11 +169,11 @@ function toosmallthresholdstillgetswrites(next) {
             batch: { iterations: 500 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1, last: 500}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
-            assert.equal(500, files.length);
+            assert.equal(499, files.length);
             console.log(name, 'passed');
             next();
         },
@@ -181,7 +192,7 @@ function timerotation(next) {
             batch: { duration: 9500 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -227,7 +238,7 @@ function gzippedfiles(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -251,7 +262,7 @@ function totalsize(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 16600, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -274,7 +285,7 @@ function totalfiles(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 57880, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -297,7 +308,7 @@ function shorthandperiod(next) {
             batch: { iterations: 100 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1, last: 100}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -325,7 +336,7 @@ function multiplerotatorsonsamefile(next) {
             RotatingFileStream({ path: name + '/test.log', period: '1000ms', shared: true });
         },
         function (next) {
-            checkFileConsistency(name, next);
+            checkFileConsistency(name, {first: 1}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
