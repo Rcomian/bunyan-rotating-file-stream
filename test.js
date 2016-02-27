@@ -1,12 +1,15 @@
 var bunyan = require('bunyan');
 var _ = require('lodash');
 var fs = require('fs');
+var path = require('path');
+var readline = require('readline');
 var assert = require('assert');
 var fx = require('mkdir-recursive');
 var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
+var zlib = require('zlib');
 var setLongTimeout = require('./lib/setlongtimeout');
 
 var whyRunning;
@@ -40,7 +43,7 @@ function runTest(name, options, next) {
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
-            log.info({node: 'a', i});
+            log.info({node: 'a', i: i});
             i += 1;
 
             if (typeof (batch.iterations) !== 'undefined' && i >= batch.iterations) {
@@ -68,6 +71,49 @@ function runTest(name, options, next) {
     }
 }
 
+function checkFileConsistency(directory, next) {
+    fs.readdir(directory, function (err, files) {
+        async.sortBy(files, function (file, callback) {
+            fs.stat(path.join(directory, file), function (err, stats) {
+                callback(err, stats.mtime);
+            });
+        }, function (err, results){
+            var nextExpectedId = null;
+
+            async.forEachSeries(results, function (file, next) {
+                var fullpath = path.join(directory, file);
+
+                var parsed = path.parse(fullpath);
+
+                var inputStream = fs.createReadStream(fullpath);
+                if (parsed.ext === '.gz') {
+                    var gz = inputStream.pipe(zlib.createGunzip());
+                }
+
+                const rl = readline.createInterface({
+                    input: gz || inputStream
+                });
+
+                rl.on('line', function (line) {
+                    var log = JSON.parse(line);
+                    if (nextExpectedId === null) {
+                        nextExpectedId = log.i + 1;
+                    } else {
+                        assert.equal(nextExpectedId, log.i, fullpath);
+                        nextExpectedId += 1;
+                    }
+                });
+
+                rl.once('close', function () {
+                    next();
+                });
+            }, function done(err) {
+                next(err);
+            });
+        });
+    });
+}
+
 function ignoreMissing(next) {
     return function (err) {
         if (!err || err.code === 'ENOENT') {
@@ -89,6 +135,9 @@ function basicthreshold(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
+            checkFileConsistency(name, next);
+        },
+        function (next) {
             var files = fs.readdirSync(name);
             assert.equal(13, files.length);
             console.log(name, 'passed');
@@ -108,6 +157,9 @@ function toosmallthresholdstillgetswrites(next) {
             stream: { path: name + '/test.log', threshold: 1, totalFiles: 502 },
             batch: { iterations: 500 }
         }, next); },
+        function (next) {
+            checkFileConsistency(name, next);
+        },
         function (next) {
             var files = fs.readdirSync(name);
             assert.equal(500, files.length);
@@ -129,6 +181,9 @@ function timerotation(next) {
             batch: { duration: 9500 }
         }, next); },
         function (next) {
+            checkFileConsistency(name, next);
+        },
+        function (next) {
             var files = fs.readdirSync(name);
             assert.equal(10, files.length);
             console.log(name, 'passed');
@@ -149,6 +204,9 @@ function timerotationnologging(next) {
             batch: { size: 0, duration: 9500 }
         }, next); },
         function (next) {
+            checkFileConsistency(name, next);
+        },
+        function (next) {
             var files = fs.readdirSync(name);
             assert.equal(10, files.length);
             console.log(name, 'passed');
@@ -168,6 +226,9 @@ function gzippedfiles(next) {
             stream: { path: name + '/test.log', threshold: '1m', gzip: true },
             batch: { iterations: 100000 }
         }, next); },
+        function (next) {
+            checkFileConsistency(name, next);
+        },
         function (next) {
             var files = fs.readdirSync(name);
             assert.equal(13, files.length);
@@ -190,6 +251,9 @@ function totalsize(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
+            checkFileConsistency(name, next);
+        },
+        function (next) {
             var files = fs.readdirSync(name);
             assert.equal(11, files.length);
             console.log(name, 'passed');
@@ -210,6 +274,9 @@ function totalfiles(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
+            checkFileConsistency(name, next);
+        },
+        function (next) {
             var files = fs.readdirSync(name);
             assert.equal(6, files.length);
             console.log(name, 'passed');
@@ -229,6 +296,9 @@ function shorthandperiod(next) {
             stream: { path: name + '/test.log', period: 'hourly'},
             batch: { iterations: 100 }
         }, next); },
+        function (next) {
+            checkFileConsistency(name, next);
+        },
         function (next) {
             var files = fs.readdirSync(name);
             assert.equal(1, files.length);
@@ -253,6 +323,9 @@ function multiplerotatorsonsamefile(next) {
 
             // Setup the second rotator
             RotatingFileStream({ path: name + '/test.log', period: '1000ms', shared: true });
+        },
+        function (next) {
+            checkFileConsistency(name, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -380,25 +453,28 @@ function checksetlongtimeoutclearnormalperiods(next) {
     }, 11000);
 }
 
-async.parallel([
-    basicthreshold,
-    timerotation,
-    timerotationnologging,
-    gzippedfiles,
-    totalsize,
-    totalfiles,
-    shorthandperiod,
-    checkrotationofoldfile,
-    checkrotationofnewfile,
-    checksetlongtimeout,
-    checksetlongtimeoutclear,
-    checksetlongtimeoutclearnormalperiods,
-    multiplerotatorsonsamefile,
-    toosmallthresholdstillgetswrites
-], function (err) {
-    if (err) console.log(err);
+fx.mkdir('testlogs', function () {
 
-    clearTimeout(totalTimeout);
+    async.parallel([
+        basicthreshold,
+        timerotation,
+        timerotationnologging,
+        gzippedfiles,
+        totalsize,
+        totalfiles,
+        shorthandperiod,
+        checkrotationofoldfile,
+        checkrotationofnewfile,
+        checksetlongtimeout,
+        checksetlongtimeoutclear,
+        checksetlongtimeoutclearnormalperiods,
+        multiplerotatorsonsamefile,
+        toosmallthresholdstillgetswrites
+    ], function (err) {
+        if (err) console.log(err);
+
+        clearTimeout(totalTimeout);
+    });
 });
 
 var totalTimeout = setTimeout(function () {
