@@ -22,6 +22,11 @@ Bunyan Rotating File Stream is a rotating file stream component that has some ex
 
 [![Join the chat at https://gitter.im/Rcomian/bunyan-rotating-file-stream](https://badges.gitter.im/Rcomian/bunyan-rotating-file-stream.svg)](https://gitter.im/Rcomian/bunyan-rotating-file-stream?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+## 1.4
+
+Allow an option to specify the order that fields can be written to the file. Purely for visual purposes.
+
+
 ## 1.3
 
 It's a very common programming error to accidentally create 2 rotating file streams against the same log file.
@@ -31,15 +36,6 @@ each time. To do this add `shared: true` to the list of options when creating ea
 
 Either way, it is now not possible to create 2 rotating file streams against the same file.
 
-## 1.2
-
-- Support non-raw streams. For some reason, raw streams are MUCH faster in high load scenarios (at least when this is the only stream).
-- Better guarantees over file rollover - we will write exactly one log record that goes over the size threshold before we rotate
-  The previous performance release meant that we couldn't rotate until the write had completed to the disk - in the meantime several other
-  logs could have been written. This made everything unpredictable.
-- Making better use of the cargo datatype to write multiple log records in a single event loop tick.
-- Using setImmediate rather than process.nextTick in the write loop to allow io and other operations time to happen rather than hog the event loop.
-- Other refactorings and minor bug fixes.
 
 # Current Status
 
@@ -56,7 +52,7 @@ gaurantees to make.
 npm install bunyan-rotating-file-stream
 ```
 
-# Features
+# Main Features
 
 - Rotate to a new log file periodically (can also rotate on startup to clean old log files)
 - Rotate to a new log file once the main log file goes over a certain size
@@ -66,7 +62,7 @@ npm install bunyan-rotating-file-stream
 - Supports being a raw stream or a normal stream
 
 
-## stream type: `rotating-file`
+## How to use
 
 **WARNING on node 0.8 usage:** Users should use at
 least node 0.10 (node 0.8 does not support the `unref()` method on
@@ -85,13 +81,14 @@ Alternatively, consider using a system file rotation facility such as
 for details.
 
 Add this stream directly to the bunyan logger.
-The logger supports being both a raw and normal stream modes. Raw streams can be faster
+The stream supports being both a raw and normal stream modes. Raw streams can be faster
 under some high-load scenarios but may serialize the json differently to bunyan.
 
 ```js
     var log = bunyan.createLogger({
         name: 'foo',
         streams: [{
+            type: 'raw',
             stream: new RotatingFileStream({
                 path: '/var/log/foo.log',
                 period: '1d',          // daily rotation
@@ -123,6 +120,7 @@ file names.
 <th>Default</th>
 <th>Description</th>
 </tr>
+<tr>
 <td>path</td>
 <td>Yes</td>
 <td>-</td>
@@ -164,6 +162,7 @@ eg, '100k', '1m', '2g' etc.</td>
 <td>0</td>
 <td>The maximum number of rotated files to keep. 0 to keep files regardless of how many there are.</td>
 </tr>
+<tr>
 <td>totalSize</td>
 <td>No</td>
 <td>0</td>
@@ -178,27 +177,26 @@ eg, '100k', '1m', '2g' etc.</td>
 <td>false</td>
 <td>Compress rotated files using gzip. Adds a '.gz' extension.</td>
 </tr>
+<tr>
+<td>fieldOrder</td>
+<td>No</td>
+<td></td>
+<td><p>An array of string that specify the order the log parameters are written to the file.</p>
+
+<p>This option allows certain keys in the log fields to be written first for each log entry in the file.
+For example, if you use the value ['time'], the timestamp will appear on the left of each row.
+This doesn't affect how programs read each log record if they just JSON.parse each line at a time, it's
+purely for visual browsing when you scan through the text file.
+For this to work, the stream must be set to "raw" mode. You can't use this option without that setting.
+This option has a measurable performance impact as it's copying each log entry object, so be aware if you're
+using this in heavily loaded systems.</p>
+
+<p>*note* This feature currently works using an undocumented and un-guaranteed side effect of how serialisation
+works. It may break for a time on new versions of node if the internals of serialisation change how things work.
+In that case, the replacement code will likely be even slower.</p>
+</td>
+</tr>
 </table>
-
-
-**Note on log rotation**: Often you may be using external log rotation utilities
-like `logrotate` on Linux or `logadm` on SmartOS/Illumos. In those cases, unless
-your are ensuring "copy and truncate" semantics (via `copytruncate` with
-logrotate or `-c` with logadm) then the fd for your 'file' stream will change.
-You can tell bunyan to reopen the file stream with code like this in your
-app:
-
-```js
-var log = bunyan.createLogger(...);
-...
-process.on('SIGUSR2', function () {
-    log.reopenFileStreams();
-});
-```
-
-where you'd configure your log rotation to send SIGUSR2 (or some other signal)
-to your process. Any other mechanism to signal your app to run
-`log.reopenFileStreams()` would work as well.
 
 
 The scheme I follow is most succinctly described by the bootstrap guys

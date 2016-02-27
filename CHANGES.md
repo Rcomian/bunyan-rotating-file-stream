@@ -1,5 +1,9 @@
 # bunyan Changelog
 
+## 1.4.0
+- New feature to allow the user to specify the order the fields of the log records are written to the log file, this can make manual browsing of the files easier if you put the timestamp and other relevant information first.
+- Some clean ups and refactorings to try to remove some flags.
+
 ## 1.3.1
 
 - Fix bug: If we started rotating files in the middle of a write batch, the remaining logs in the batch would be reversed.

@@ -1,6 +1,6 @@
 {
   "name": "bunyan-rotating-file-stream",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "a rotating file stream for the bunyan logging system",
   "author": "Jim Tupper <npm@tupper.org.uk> (http://github.com/rcomian)",
   "main": "./index.js",
