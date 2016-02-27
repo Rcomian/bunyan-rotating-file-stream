@@ -20,8 +20,13 @@ try {
     console.log('"Why is node running" disabled');
 }
 
+function fixpid(log) {
+    log.pid = 1;
+    return log;
+}
+
 function runTest(name, options, next) {
-    var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
+    var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log', map: fixpid }, options.stream));
 
     var log = bunyan.createLogger({
         name: 'foo',
@@ -150,7 +155,7 @@ function basicthreshold(next) {
         },
         function (next) {
             var files = fs.readdirSync(name);
-            assert.equal(13, files.length);
+            assert.equal(12, files.length);
             console.log(name, 'passed');
             next();
         },
@@ -242,8 +247,8 @@ function gzippedfiles(next) {
         },
         function (next) {
             var files = fs.readdirSync(name);
-            assert.equal(13, files.length);
-            assert.equal(12, _(files).filter( (f) => { return f.endsWith('.gz'); }).value().length);
+            assert.equal(12, files.length);
+            assert.equal(11, _(files).filter( (f) => { return f.endsWith('.gz'); }).value().length);
             console.log(name, 'passed');
             next();
         },
@@ -262,7 +267,7 @@ function totalsize(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, {first: 16600, last: 100000}, next);
+            checkFileConsistency(name, {first: 8535, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
@@ -285,7 +290,7 @@ function totalfiles(next) {
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
-            checkFileConsistency(name, {first: 57880, last: 100000}, next);
+            checkFileConsistency(name, {first: 50827, last: 100000}, next);
         },
         function (next) {
             var files = fs.readdirSync(name);
