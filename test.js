@@ -110,7 +110,7 @@ function toosmallthresholdstillgetswrites(next) {
         }, next); },
         function (next) {
             var files = fs.readdirSync(name);
-            assert.equal(501, files.length);
+            assert.equal(500, files.length);
             console.log(name, 'passed');
             next();
         },
