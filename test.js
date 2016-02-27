@@ -23,6 +23,7 @@ function runTest(name, options, next) {
     var log = bunyan.createLogger({
         name: 'foo',
         streams: [{
+            type: 'raw',
             stream: rfs
         }]
     });
@@ -84,7 +85,7 @@ function basicthreshold(next) {
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
         function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: '1m' },
+            stream: { path: name + '/test.log', threshold: '1m', fieldOrder: ['pid', 'time'] },
             batch: { iterations: 100000 }
         }, next); },
         function (next) {
@@ -126,6 +127,26 @@ function timerotation(next) {
         function (next) { runTest (name, {
             stream: { path: name + '/test.log', period: '1000ms' },
             batch: { duration: 9500 }
+        }, next); },
+        function (next) {
+            var files = fs.readdirSync(name);
+            assert.equal(10, files.length);
+            console.log(name, 'passed');
+            next();
+        },
+        function (next) { rmdir(name, ignoreMissing(next)); }
+    ], next);
+}
+
+function timerotationnologging(next) {
+    var name = 'testlogs/' + 'timerotationnologging';
+
+    async.series([
+        function (next) { rmdir(name, ignoreMissing(next)); },
+        function (next) { fx.mkdir(name, next); },
+        function (next) { runTest (name, {
+            stream: { path: name + '/test.log', period: '1000ms' },
+            batch: { size: 0, duration: 9500 }
         }, next); },
         function (next) {
             var files = fs.readdirSync(name);
@@ -362,6 +383,7 @@ function checksetlongtimeoutclearnormalperiods(next) {
 async.parallel([
     basicthreshold,
     timerotation,
+    timerotationnologging,
     gzippedfiles,
     totalsize,
     totalfiles,

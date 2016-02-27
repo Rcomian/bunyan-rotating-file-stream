@@ -83,7 +83,7 @@ function throughput(next) {
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
         function (next) { runTest (name, {
-            stream: { path: name + '/test.log' },
+            stream: { path: name + '/test.log', noCyclesCheck: true },
             batch: { iterations: 1000000, size: 1000 }
         }, next); },
         function (next) {
