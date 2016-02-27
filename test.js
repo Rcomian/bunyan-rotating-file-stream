@@ -163,6 +163,29 @@ function basicthreshold(next) {
     ], next);
 }
 
+function Ntemplatepath(next) {
+    var name = 'testlogs/' + 'Ntemplatepath';
+
+    async.series([
+        function (next) { rmdir(name, ignoreMissing(next)); },
+        function (next) { fx.mkdir(name, next); },
+        function (next) { runTest (name, {
+            stream: { path: name + '/test.%N.log', threshold: '1m', totalSize: '5m' },
+            batch: { iterations: 100000 }
+        }, next); },
+        function (next) {
+            checkFileConsistency(name, {first: 50827, last: 100000}, next);
+        },
+        function (next) {
+            var files = fs.readdirSync(name);
+            assert.equal(6, files.length);
+            console.log(name, 'passed');
+            next();
+        },
+        function (next) { rmdir(name, ignoreMissing(next)); }
+    ], next);
+}
+
 function toosmallthresholdstillgetswrites(next) {
     var name = 'testlogs/' + 'toosmallthresholdstillgetswrites';
 
@@ -485,7 +508,8 @@ fx.mkdir('testlogs', function () {
         checksetlongtimeoutclear,
         checksetlongtimeoutclearnormalperiods,
         multiplerotatorsonsamefile,
-        toosmallthresholdstillgetswrites
+        toosmallthresholdstillgetswrites,
+        Ntemplatepath
     ], function (err) {
         if (err) console.log(err);
 
