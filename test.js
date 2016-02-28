@@ -104,6 +104,13 @@ function checkFileConsistency(directory, opts, next) {
                 var inputStream = fs.createReadStream(fullpath);
                 if (parsed.ext === '.gz') {
                     var gz = inputStream.pipe(zlib.createGunzip());
+                } else {
+                    var ext = parsed.ext.slice(1);
+                    if (!isNaN(parseInt(ext))) {
+                        ext = parsed.name.split('.').slice(-1)[0];
+                    }
+
+                    assert.equal('log', ext, 'incorrect file extension for file: ' + ext + '|' + fullpath);
                 }
 
                 const rl = readline.createInterface({
@@ -162,6 +169,38 @@ function basicthreshold(template) {
             function (next) {
                 var files = fs.readdirSync(name);
                 assert.equal(12, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function reusefiles(template, reuse) {
+    return function (next) {
+        var name = 'testlogs/' + 'reusetimestampedfiles-' + template + (reuse ? '-reused' : '-newfile');
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', startNewFile: !reuse, threshold: 800 },
+                batch: { iterations: 10 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 10}, next);
+            },
+            function (next) {
+                setTimeout(next, 2000);
+            },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', startNewFile: !reuse, threshold: 800 },
+                batch: { iterations: 1 }
+            }, next); },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(reuse ? 2 : 3, files.length, 'Wrong number of files for ' + name.replace('%d', '%%d') + JSON.stringify(files));
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -499,6 +538,12 @@ fx.mkdir('testlogs', function () {
         basicthreshold('test-%N'),
         basicthreshold('test-%Y-%m-%d'),
         basicthreshold('test-%Y-%m-%d-%H-%M-%S'),
+        reusefiles('test', true),
+        reusefiles('test-%N', true),
+        reusefiles('test-%Y-%m-%d', true),
+        reusefiles('test-%Y-%m-%d-%H-%M-%S', true),
+        reusefiles('test-%Y-%m-%d', false),
+        reusefiles('test-%Y-%m-%d-%H-%M-%S', false),
         timerotation('test'),
         timerotation('test-%N'),
         timerotation('test-%Y-%m-%d'),
