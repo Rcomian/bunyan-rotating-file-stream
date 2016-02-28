@@ -1,5 +1,12 @@
 # bunyan Changelog
 
+## 1.5.0 Templates Release
+
+We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
+All previous features are maintained and you should be able to use your existing configuration without change.
+
+Integration testing is still rudimentary in terms of technology, but the coverage has been massively improved, checking that no logs have been re-ordered or lost.
+
 ## 1.4.0
 - New feature to allow the user to specify the order the fields of the log records are written to the log file, this can make manual browsing of the files easier if you put the timestamp and other relevant information first.
 - Some clean ups and refactorings to try to remove some flags.
