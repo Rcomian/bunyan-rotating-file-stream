@@ -83,12 +83,12 @@ function throughput(next) {
         function (next) { rmdir(name, ignoreMissing(next)); },
         function (next) { fx.mkdir(name, next); },
         function (next) { runTest (name, {
-            stream: { path: name + '/test.log', noCyclesCheck: true },
+            stream: { path: name + '/test-%Y.log', noCyclesCheck: true },
             batch: { iterations: 1000000, size: 1000 }
         }, next); },
         function (next) {
             var files = fs.readdirSync(name);
-            assert.equal(1, files.length);
+            assert.equal(1, files.length, 'Expected 1 file, found: ' + JSON.stringify(files));
             console.log(name, 'passed');
             next();
         },
