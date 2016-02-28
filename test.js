@@ -36,6 +36,11 @@ function runTest(name, options, next) {
         }]
     });
 
+    rfs.on('error', function (err) {
+        console.log('err', err);
+        throw err;
+    });
+
     rfs.on('losingdata', function () {
         if (ia) clearInterval(ia);
         if (maintimer) clearTimeout(maintimer);
@@ -132,7 +137,7 @@ function checkFileConsistency(directory, opts, next) {
 
 function ignoreMissing(next) {
     return function (err) {
-        if (!err || err.code === 'ENOENT') {
+        if (!err || err.code === 'ENOENT' || err.code === 'EEXIST') {
             next();
         } else {
             next(err);
@@ -140,240 +145,235 @@ function ignoreMissing(next) {
     }
 }
 
-function basicthreshold(next) {
-    var name = 'testlogs/' + 'basicthreshold';
+function basicthreshold(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'basicthreshold-' + template;
 
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: '1m', fieldOrder: ['pid', 'time'] },
-            batch: { iterations: 100000 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 1, last: 100000}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(12, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: '1m', fieldOrder: ['pid', 'time'] },
+                batch: { iterations: 100000 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 100000}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(12, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
 }
 
-function Ntemplatepath(next) {
-    var name = 'testlogs/' + 'Ntemplatepath';
+function toosmallthresholdstillgetswrites(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'toosmallthresholdstillgetswrites-' + template;
 
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.%N.log', threshold: '1m', totalSize: '5m' },
-            batch: { iterations: 100000 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 50827, last: 100000}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(6, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: 1, totalFiles: 502 },
+                batch: { iterations: 500 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 500}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(499, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
 }
 
-function toosmallthresholdstillgetswrites(next) {
-    var name = 'testlogs/' + 'toosmallthresholdstillgetswrites';
+function timerotation(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'timerotation-' + template;
 
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: 1, totalFiles: 502 },
-            batch: { iterations: 500 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 1, last: 500}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(499, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function timerotation(next) {
-    var name = 'testlogs/' + 'timerotation';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', period: '1000ms' },
-            batch: { duration: 9500 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 1}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(10, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function timerotationnologging(next) {
-    var name = 'testlogs/' + 'timerotationnologging';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', period: '1000ms' },
-            batch: { size: 0, duration: 9500 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(10, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function gzippedfiles(next) {
-    var name = 'testlogs/' + 'gzippedfiles';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: '1m', gzip: true },
-            batch: { iterations: 100000 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 1, last: 100000}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(12, files.length);
-            assert.equal(11, _(files).filter( (f) => { return f.endsWith('.gz'); }).value().length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function totalsize(next) {
-    var name = 'testlogs/' + 'totalsize';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: '1m', totalSize: '10m' },
-            batch: { iterations: 100000 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 8535, last: 100000}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(11, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function totalfiles(next) {
-    var name = 'testlogs/' + 'totalfiles';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', threshold: '1m', totalFiles: 5 },
-            batch: { iterations: 100000 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 50827, last: 100000}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(6, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function shorthandperiod(next) {
-    var name = 'testlogs/' + 'shorthandperiod';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) { runTest (name, {
-            stream: { path: name + '/test.log', period: 'hourly'},
-            batch: { iterations: 100 }
-        }, next); },
-        function (next) {
-            checkFileConsistency(name, {first: 1, last: 100}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(1, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
-}
-
-function multiplerotatorsonsamefile(next) {
-    var name = 'testlogs/' + 'multiplerotatorsonsamefile';
-
-    async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
-        function (next) {
-            runTest (name, {
-                stream: { path: name + '/test.log', period: '1000ms', shared: true },
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: '1000ms' },
                 batch: { duration: 9500 }
-            }, next);
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(10, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
 
-            // Setup the second rotator
-            RotatingFileStream({ path: name + '/test.log', period: '1000ms', shared: true });
-        },
-        function (next) {
-            checkFileConsistency(name, {first: 1}, next);
-        },
-        function (next) {
-            var files = fs.readdirSync(name);
-            assert.equal(10, files.length);
-            console.log(name, 'passed');
-            next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
-    ], next);
+function timerotationnologging(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'timerotationnologging-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: '1000ms' },
+                batch: { size: 0, duration: 9500 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(10, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function gzippedfiles(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'gzippedfiles-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: '1m', gzip: true },
+                batch: { iterations: 100000 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 100000}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(12, files.length);
+                assert.equal(11, _(files).filter( (f) => { return f.endsWith('.gz'); }).value().length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function totalsize(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'totalsize-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: '1m', totalSize: '5m' },
+                batch: { iterations: 100000 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 50827, last: 100000}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(6, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function totalfiles(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'totalfiles-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: '1m', totalFiles: 5 },
+                batch: { iterations: 100000 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 50827, last: 100000}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(6, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function shorthandperiod(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'shorthandperiod-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: 'hourly'},
+                batch: { iterations: 100 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 100}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(1, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
+function multiplerotatorsonsamefile(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'multiplerotatorsonsamefile-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { fx.mkdir(name, next); },
+            function (next) {
+                runTest (name, {
+                    stream: { path: name + '/' + template + '.log', period: '1000ms', shared: true },
+                    batch: { duration: 9500 }
+                }, next);
+
+                // Setup the second rotator
+                RotatingFileStream({ path: name + '/' + template + '.log', period: '1000ms', shared: true });
+            },
+            function (next) {
+                checkFileConsistency(name, {first: 1}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(10, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
 }
 
 function checkrotationofoldfile(next) {
@@ -495,21 +495,48 @@ function checksetlongtimeoutclearnormalperiods(next) {
 fx.mkdir('testlogs', function () {
 
     async.parallel([
-        basicthreshold,
-        timerotation,
-        timerotationnologging,
-        gzippedfiles,
-        totalsize,
-        totalfiles,
-        shorthandperiod,
+        basicthreshold('test'),
+        basicthreshold('test-%N'),
+        basicthreshold('test-%Y-%m-%d'),
+        basicthreshold('test-%Y-%m-%d-%H-%M-%S'),
+        timerotation('test'),
+        timerotation('test-%N'),
+        timerotation('test-%Y-%m-%d'),
+        timerotation('test-%Y-%m-%d-%H-%M-%S'),
+        timerotationnologging('test'),
+        timerotationnologging('test-%N'),
+        timerotationnologging('test-%Y-%m-%d'),
+        timerotationnologging('test-%Y-%m-%d-%H-%M-%S'),
+        gzippedfiles('test'),
+        gzippedfiles('test-%N'),
+        gzippedfiles('test-%Y-%m-%d'),
+        gzippedfiles('test-%Y-%m-%d-%H-%M-%S'),
+        totalsize('test'),
+        totalsize('test-%N'),
+        totalsize('test-%Y-%m-%d'),
+        totalsize('test-%Y-%m-%d-%H-%M-%S'),
+        totalfiles('test'),
+        totalfiles('test-%N'),
+        totalfiles('test-%Y-%m-%d'),
+        totalfiles('test-%Y-%m-%d-%H-%M-%S'),
+        shorthandperiod('test'),
+        shorthandperiod('test-%N'),
+        shorthandperiod('test-%Y-%m-%d'),
+        shorthandperiod('test-%Y-%m-%d-%H-%M-%S'),
+        multiplerotatorsonsamefile('test'),
+        multiplerotatorsonsamefile('test-%N'),
+        multiplerotatorsonsamefile('test-%Y-%m-%d'),
+        multiplerotatorsonsamefile('test-%Y-%m-%d-%H-%M-%S'),
+        toosmallthresholdstillgetswrites('test'),
+        toosmallthresholdstillgetswrites('test-%N'),
+        toosmallthresholdstillgetswrites('test-%Y-%m-%d'),
+        toosmallthresholdstillgetswrites('test-%Y-%m-%d-%H-%M-%S'),
+
         checkrotationofoldfile,
         checkrotationofnewfile,
         checksetlongtimeout,
         checksetlongtimeoutclear,
-        checksetlongtimeoutclearnormalperiods,
-        multiplerotatorsonsamefile,
-        toosmallthresholdstillgetswrites,
-        Ntemplatepath
+        checksetlongtimeoutclearnormalperiods
     ], function (err) {
         if (err) console.log(err);
 
@@ -522,4 +549,4 @@ var totalTimeout = setTimeout(function () {
     if (whyRunning) {
         whyRunning();
     }
-}, 20000);
+}, 1200000);
