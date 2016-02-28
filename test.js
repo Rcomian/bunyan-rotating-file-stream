@@ -177,15 +177,15 @@ function basicthreshold(template) {
     }
 }
 
-function reusefiles(template, reuse) {
+function forcenewfile(template, forcenew) {
     return function (next) {
-        var name = 'testlogs/' + 'reusetimestampedfiles-' + template + (reuse ? '-reused' : '-newfile');
+        var name = 'testlogs/' + 'forcenewfile-' + template + (forcenew ? '-newfile' : '-reused');
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
             function (next) { fx.mkdir(name, next); },
             function (next) { runTest (name, {
-                stream: { path: name + '/' + template + '.log', startNewFile: !reuse, threshold: 800 },
+                stream: { path: name + '/' + template + '.log', startNewFile: forcenew, threshold: 800 },
                 batch: { iterations: 10 }
             }, next); },
             function (next) {
@@ -195,12 +195,13 @@ function reusefiles(template, reuse) {
                 setTimeout(next, 2000);
             },
             function (next) { runTest (name, {
-                stream: { path: name + '/' + template + '.log', startNewFile: !reuse, threshold: 800 },
+                stream: { path: name + '/' + template + '.log', startNewFile: forcenew, threshold: 800 },
                 batch: { iterations: 1 }
             }, next); },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(reuse ? 2 : 3, files.length, 'Wrong number of files for ' + name.replace('%d', '%%d') + JSON.stringify(files));
+                var expectedfiles = forcenew ? 3 : 2
+                assert.equal(expectedfiles, files.length, 'Wrong number of files for ' + name.replace('%d', '%%d') + ' expected: ' + expectedfiles + ' got: ' + JSON.stringify(files));
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -532,13 +533,15 @@ fx.mkdir('testlogs', function () {
         basicthreshold('test-%Y-%m-%d'),
         basicthreshold('test-%Y-%m-%d-%H-%M-%S'),
         basicthreshold('test-%N-%Y-%m-%d'),
-        reusefiles('test', true),
-        reusefiles('test-%N', true),
-        reusefiles('test-%Y-%m-%d', true),
-        reusefiles('test-%Y-%m-%d-%H-%M-%S', true),
-        reusefiles('test-%Y-%m-%d', false),
-        reusefiles('test-%Y-%m-%d-%H-%M-%S', false),
-        reusefiles('test-%N-%Y-%m-%d', false),
+        forcenewfile('test', true),
+        forcenewfile('test-%N', true),
+        forcenewfile('test', false),
+        forcenewfile('test-%N', false),
+        forcenewfile('test-%Y-%m-%d', true),
+        forcenewfile('test-%Y-%m-%d-%H-%M-%S', true),
+        forcenewfile('test-%Y-%m-%d', false),
+        forcenewfile('test-%Y-%m-%d-%H-%M-%S', false),
+        forcenewfile('test-%N-%Y-%m-%d', false),
         timerotation('test'),
         timerotation('test-%N'),
         timerotation('test-%Y-%m-%d'),
