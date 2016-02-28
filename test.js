@@ -420,18 +420,15 @@ function checkrotationofoldfile(next) {
 
     var periodtrigger = InitialPeriodRotateTrigger({ period: '1h' });
 
-    var rotations = 0;
-    periodtrigger.on('rotate', function () {
-        rotations += 1;
-    });
+    var now = Date.parse('2016-02-14 15:06');
+    var oldfiletime = Date.parse('2016-02-14 10:45')
 
-    periodtrigger.checkIfRotationNeeded(Date.now() - (10000 * 60 * 60 * 3));
+    var result = periodtrigger.checkIfRotationNeeded(oldfiletime, now);
 
-    setTimeout(function () {
-        assert.equal(1, rotations);
-        console.log(name, 'passed');
-        next();
-    }, 1000);
+    assert.equal(true, result.needsRotation);
+    assert.equal(Date.parse('2016-02-14 14:45'), result.rotateTo);
+    console.log(name, 'passed');
+    next();
 }
 
 function checkrotationofnewfile(next) {
@@ -439,18 +436,14 @@ function checkrotationofnewfile(next) {
 
     var periodtrigger = InitialPeriodRotateTrigger({ period: '1h' });
 
-    var rotations = 0;
-    periodtrigger.on('rotate', function () {
-        rotations += 1;
-    });
+    var now = Date.parse('2016-02-14 15:06');
+    var oldfiletime = Date.parse('2016-02-14 15:04')
 
-    periodtrigger.checkIfRotationNeeded(Date.now() - (3));
+    var result = periodtrigger.checkIfRotationNeeded(oldfiletime, now);
 
-    setTimeout(function () {
-        assert.equal(0, rotations);
-        console.log(name, 'passed');
-        next();
-    }, 1000);
+    assert.equal(false, result.needsRotation);
+    console.log(name, 'passed');
+    next();
 }
 
 function checksetlongtimeout(next) {
