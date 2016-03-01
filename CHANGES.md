@@ -1,5 +1,10 @@
 # bunyan Changelog
 
+## 1.5.1
+
+- Fixed an issue with gzipped files not being deleted when using datestamps
+- Fixed an issue with gzipped files not being rotated correctly when continuing an existing log file
+
 ## 1.5.0 Templates Release
 
 We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
