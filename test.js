@@ -4,13 +4,14 @@ var fs = require('fs');
 var path = require('path');
 var readline = require('readline');
 var assert = require('assert');
-var fx = require('mkdir-recursive');
+var mkdirp = require('mkdirp');
 var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
 var zlib = require('zlib');
 var setLongTimeout = require('./lib/setlongtimeout');
+var semver = require('semver');
 
 var whyRunning;
 
@@ -24,6 +25,9 @@ function fixpid(log) {
     log.pid = 1;
     return log;
 }
+
+// Prior to node v4, high load scenarios (like these tests) can starve timer events
+var logdelay = semver.lt(process.version, '4.0.0') ? 10 : 0;
 
 function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log', map: fixpid }, options.stream));
@@ -66,7 +70,7 @@ function runTest(name, options, next) {
                 return;
             }
         }
-    }, 0);
+    }, logdelay);
 
     var maintimer = null;
 
@@ -158,17 +162,17 @@ function basicthreshold(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', fieldOrder: ['pid', 'time'] },
-                batch: { iterations: 100000 }
+                batch: { iterations: 50000 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 1, last: 100000}, next);
+                checkFileConsistency(name, {first: 1, last: 50000}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(12, files.length);
+                assert.equal(6, files.length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -183,7 +187,7 @@ function forcenewfile(template, forcenew) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', startNewFile: forcenew, threshold: 800 },
                 batch: { iterations: 10 }
@@ -216,17 +220,17 @@ function toosmallthresholdstillgetswrites(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: 1, totalFiles: 502 },
-                batch: { iterations: 500 }
+                batch: { iterations: 100 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 1, last: 500}, next);
+                checkFileConsistency(name, {first: 1, last: 100}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(499, files.length);
+                assert.equal(99, files.length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -241,7 +245,7 @@ function timerotation(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: '1000ms' },
                 batch: { duration: 9500 }
@@ -266,7 +270,7 @@ function timerotationnologging(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: '1000ms' },
                 batch: { size: 0, duration: 9500 }
@@ -291,18 +295,18 @@ function gzippedfiles(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', gzip: true },
-                batch: { iterations: 100000 }
+                batch: { iterations: 50000 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 1, last: 100000}, next);
+                checkFileConsistency(name, {first: 1, last: 50000}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(12, files.length);
-                assert.equal(11, _(files).filter( (f) => { return f.endsWith('.gz'); }).value().length);
+                assert.equal(6, files.length);
+                assert.equal(5, _(files).filter( function (f) { return f.slice(-3) === '.gz'; }).value().length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -317,17 +321,17 @@ function totalsize(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
-                stream: { path: name + '/' + template + '.log', threshold: '1m', totalSize: '5m' },
-                batch: { iterations: 100000 }
+                stream: { path: name + '/' + template + '.log', threshold: '1m', totalSize: '3m' },
+                batch: { iterations: 50000 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 50827, last: 100000}, next);
+                checkFileConsistency(name, {first: 17003, last: 50000}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(6, files.length);
+                assert.equal(4, files.length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -342,17 +346,17 @@ function totalfiles(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
-                stream: { path: name + '/' + template + '.log', threshold: '1m', totalFiles: 5 },
-                batch: { iterations: 100000 }
+                stream: { path: name + '/' + template + '.log', threshold: '1m', totalFiles: 3 },
+                batch: { iterations: 50000 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 50827, last: 100000}, next);
+                checkFileConsistency(name, {first: 17003, last: 50000}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(6, files.length);
+                assert.equal(4, files.length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -367,7 +371,7 @@ function shorthandperiod(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: 'hourly'},
                 batch: { iterations: 100 }
@@ -392,7 +396,7 @@ function multiplerotatorsonsamefile(template) {
 
         async.series([
             function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { fx.mkdir(name, next); },
+            function (next) { mkdirp(name, next); },
             function (next) {
                 runTest (name, {
                     stream: { path: name + '/' + template + '.log', period: '1000ms', shared: true },
@@ -525,7 +529,7 @@ function checksetlongtimeoutclearnormalperiods(next) {
     }, 11000);
 }
 
-fx.mkdir('testlogs', function () {
+mkdirp('testlogs', function () {
 
     async.parallel([
         basicthreshold('test'),

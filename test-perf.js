@@ -2,7 +2,7 @@ var bunyan = require('bunyan');
 var _ = require('lodash');
 var fs = require('fs');
 var assert = require('assert');
-var fx = require('mkdir-recursive');
+var mkdirp = require('mkdirp');
 var rmdir = require('rmdir');
 var RotatingFileStream = require('./index');
 var async = require('async');
@@ -38,7 +38,7 @@ function runTest(name, options, next) {
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
-            log.info({node: 'a', i});
+            log.info({node: 'a', i: i});
             i += 1;
 
             if (typeof (batch.iterations) !== 'undefined' && i >= batch.iterations) {
@@ -81,7 +81,7 @@ function throughput(next) {
 
     async.series([
         function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { fx.mkdir(name, next); },
+        function (next) { mkdirp(name, next); },
         function (next) { runTest (name, {
             stream: { path: name + '/test-%Y.log', noCyclesCheck: true },
             batch: { iterations: 1000000, size: 1000 }
