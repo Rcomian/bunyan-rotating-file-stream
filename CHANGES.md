@@ -4,7 +4,9 @@
 
 - Expanded node version compatibility and making a statement about which versions of node we offically support- `0.12.9`, `0.12.latest`, `4.latest`, `5.latest`.
 
-- Full passing test suites running against each vers
+- Full passing test suites running against each version using `nvm`.
+
+- Stress test in place, needs tuning.
 
 ## 1.5.1
 
