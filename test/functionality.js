@@ -6,11 +6,11 @@ var readline = require('readline');
 var assert = require('assert');
 var mkdirp = require('mkdirp');
 var rmdir = require('rmdir');
-var RotatingFileStream = require('./index');
+var RotatingFileStream = require('../index');
 var async = require('async');
-var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
+var InitialPeriodRotateTrigger = require('../lib/initialperiodtrigger');
 var zlib = require('zlib');
-var setLongTimeout = require('./lib/setlongtimeout');
+var setLongTimeout = require('../lib/setlongtimeout');
 var semver = require('semver');
 
 var whyRunning;

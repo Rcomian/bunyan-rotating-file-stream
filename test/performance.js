@@ -4,9 +4,9 @@ var fs = require('fs');
 var assert = require('assert');
 var mkdirp = require('mkdirp');
 var rmdir = require('rmdir');
-var RotatingFileStream = require('./index');
+var RotatingFileStream = require('../index');
 var async = require('async');
-var InitialPeriodRotateTrigger = require('./lib/initialperiodtrigger');
+var InitialPeriodRotateTrigger = require('../lib/initialperiodtrigger');
 var whyRunning;
 
 try {
