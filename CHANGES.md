@@ -1,5 +1,11 @@
 # bunyan Changelog
 
+## 1.5.2
+
+- Expanded node version compatibility and making a statement about which versions of node we offically support- `0.12.9`, `0.12.latest`, `4.latest`, `5.latest`.
+
+- Full passing test suites running against each vers
+
 ## 1.5.1
 
 - Fixed an issue with gzipped files not being deleted when using datestamps

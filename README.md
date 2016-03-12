@@ -21,6 +21,23 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 # Recent changes
 
+## 1.5.2 Compatibility
+
+Implemented tests and strategies to support specific node versions:
+
+* 0.12.9
+* 0.12.*latest*
+* 4.*latest*
+* 5.*latest*
+
+*0.10 and earlier*
+
+Not supported as it is missing a lot of useful path processing features. Whilst we could patch this with inline code and npm packages, I think it's a shame to have these hanging around when the functionality will be built into all future versions of node.
+
+*0.12*
+
+Is supported, but it's performance cannot keep up with the latest versions of node. I've had to reduce the stress involved when running tests to allow old `0.12` to keep up.
+
 
 ## 1.5 Templates Release
 
@@ -37,6 +54,9 @@ rotating file logging to limit disk space usage while maximising
 the amount of logs kept.
 
 There are a few extra features to add to the system, but in general it needs stabilisation, code cleanup and bug fixing.
+
+We can now regularly run feature tests against all supported versions of node.
+
 
 # Planned Future Features
 
