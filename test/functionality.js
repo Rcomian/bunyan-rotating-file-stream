@@ -22,12 +22,13 @@ try {
 }
 
 function fixpid(log) {
+    log.hostname = 'test01';
     log.pid = 1;
     return log;
 }
 
 // Prior to node v4, high load scenarios (like these tests) can starve timer events
-var logdelay = semver.lt(process.version, '4.0.0') ? 10 : 0;
+var logdelay = semver.lt(process.version, '4.0.0') ? 20 : 0;
 
 function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log', map: fixpid }, options.stream));
