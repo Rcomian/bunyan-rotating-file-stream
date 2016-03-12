@@ -15,6 +15,10 @@ echo ${VERSIONS[@]}
 for arg in ${VERSIONS[@]}
 do
     nvm install $arg
+
+    rm -Rf node_modules
+    nvm exec $arg npm install
+
     echo
     echo "Test functionality"
     time nvm exec $arg node test/functionality
