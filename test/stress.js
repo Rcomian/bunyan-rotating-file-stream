@@ -4,6 +4,13 @@ var uuid = require('uuid');
 var mkdirp = require('mkdirp');
 var EventEmitter = require('events').EventEmitter;
 
+var apikey = process.argv[2];
+
+var logzio = require('logzio-nodejs').createLogger({
+    token: apikey,
+    type: 'rfs ' + process.version
+});
+
 var _ = require('lodash');
 var Combinatorics = require('js-combinatorics');
 
@@ -302,6 +309,7 @@ mkdirp('testlogs/stress', function () {
     perfMon.on('report', function (report) {
         report.multiplier = multiplier;
         console.log(report);
+        logzio.log(report);
 
         if (report.period_queued > 100) {
             slowdown();
