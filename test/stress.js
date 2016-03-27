@@ -2,6 +2,7 @@ var RotatingFileStream = require('../index');
 var bunyan = require('bunyan');
 var uuid = require('uuid');
 var mkdirp = require('mkdirp');
+var EventEmitter = require('events').EventEmitter;
 
 var _ = require('lodash');
 var Combinatorics = require('js-combinatorics');
@@ -24,6 +25,104 @@ function validConfig(config) {
         (config.period != 0 || config.threshold != 0);
 
     return valid;
+}
+
+function PerfStats() {
+    var queuelength = 0, byteswritten = 0, logswritten = 0, rotations = 0, rotationtime = 0;
+
+    function queued(new_queuelength) {
+        queuelength = new_queuelength;
+    }
+
+    function writebatch(batch_byteswritten, batch_logswritten, batch_queuelength) {
+        queuelength = batch_queuelength;
+        byteswritten += batch_byteswritten;
+        logswritten += batch_logswritten;
+    }
+
+    function rotation(duration) {
+        rotations += 1;
+        rotationtime += duration;
+    }
+
+    function report(report) {
+        report.streams += 1;
+        report.queued += queuelength;
+        report.written += logswritten;
+        report.max_queued = queuelength > report.max_queued || report.max_queued === null ? queuelength : report.max_queued;
+        report.min_queued = queuelength < report.min_queued || report.min_queued === null ? queuelength : report.min_queued;
+        report.rotations += rotations;
+        report.rotationtime += rotationtime;
+    }
+
+    return {
+        queued: queued,
+        writebatch: writebatch,
+        rotation: rotation,
+        report: report
+    };
+}
+
+function PerfMon() {
+    var base = new EventEmitter();
+
+    var stats = [];
+
+    function addStream(stream) {
+        var stat = PerfStats();
+
+        stream.on('perf-queued', stat.queued);
+        stream.on('perf-writebatch', stat.writebatch);
+        stream.on('perf-rotation', stat.rotation);
+
+        stats.push(stat);
+    }
+
+    var lastqueued = 0;
+    var lastrotations = 0;
+    var lastrotationtime = 0;
+    var lastwritten = 0;
+    var lastrecordtime = Date.now();
+
+    setInterval(function () {
+        var report = {
+            streams: 0,
+            written: 0,
+            queued: 0,
+            max_queued: null,
+            min_queued: null,
+            rotations: 0,
+            rotationtime:0
+        };
+
+        stats.forEach(function (stat) {
+            stat.report(report);
+        })
+
+        var period_rotations = report.rotations - lastrotations;
+        var period_rotationtime = report.rotationtime - lastrotationtime;
+        var period_written = report.written - lastwritten;
+        var period_queued = report.queued - lastqueued;
+
+        lastrotations = report.rotations;
+        lastrotationtime = report.rotationtime;
+        lastwritten = report.written;
+        lastqueued = report.queued;
+        lastrecordtime = Date.now();
+
+        report.period_rotations = period_rotations;
+        report.period_rotationtime = period_rotationtime;
+        report.period_averagerotation = period_rotationtime / period_rotations;
+        report.period_written = period_written;
+        report.period_queued = period_queued;
+
+        base.emit('report', report);
+
+    }, 10000);
+
+    return _.extend({}, {
+        addStream: addStream
+    }, base);
 }
 
 function expandCombinations() {
@@ -59,9 +158,6 @@ function expandCombinations() {
                     stream: RotatingFileStream(config)
             };
 
-            stream.stream.on('losingdata', slowdown);
-            stream.stream.on('caughtup', speedup);
-
             streams.push(stream);
         }
 
@@ -88,16 +184,14 @@ function hardcodedStreams() {
 
 var log;
 
-var multiplier = 1.0;
+var multiplier = 2.0;
 
 function slowdown() {
-    multiplier *= 2;
-    console.log('slowdown', multiplier);
+    multiplier *= 1.03;
 }
 
 function speedup() {
-    multiplier /= 2;
-    console.log('speedup', multiplier);
+    multiplier *= 0.99;
 }
 
 var i = 0;
@@ -197,17 +291,63 @@ function doChildLogger() {
 }
 
 mkdirp('testlogs/stress', function () {
+    var streams = expandCombinations();
+    // var streams = hardcodedStreams();
+
+    var perfMon = PerfMon();
+    streams.forEach(function (stream) {
+        perfMon.addStream(stream.stream);
+    });
+
+    perfMon.on('report', function (report) {
+        report.multiplier = multiplier;
+        console.log(report);
+
+        if (report.period_queued > 100) {
+            slowdown();
+        }
+
+        if (report.period_queued > 1000) {
+            slowdown();
+        }
+
+        if (report.queued > 10000 && report.period_queued > -100) {
+            slowdown();
+        }
+
+        if (report.queued > 20000 && report.period_queued > -100) {
+            slowdown();
+        }
+
+        if (report.min_queued > 100 && report.period_queued > -100) {
+            slowdown();
+        }
+
+        if (report.queued < 1000) {
+            speedup();
+        }
+
+        if (report.period_queued < -1000) {
+            speedup();
+        }
+
+        if (report.max_queued < 5) {
+            speedup();
+        }
+    });
+
     log  = bunyan.createLogger({
         name: 'foo',
-        streams: expandCombinations()
-        //streams: hardcodedStreams()
+        streams: streams
     });
+
+
 
     debugLogger();
     infoLogger();
     warningLogger();
     errorLogger();
 
-    doChildLogger();
-    doChildLogger();
+    // doChildLogger();
+    // doChildLogger();
 });
