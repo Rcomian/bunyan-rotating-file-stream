@@ -594,7 +594,10 @@ mkdirp('testlogs', function () {
         checksetlongtimeoutclear,
         checksetlongtimeoutclearnormalperiods
     ], function (err) {
-        if (err) console.log(err);
+        if (err) {
+            console.log(err);
+            process.exit(1);
+        }
 
         clearTimeout(totalTimeout);
     });

@@ -3,13 +3,20 @@ var bunyan = require('bunyan');
 var uuid = require('uuid');
 var mkdirp = require('mkdirp');
 var EventEmitter = require('events').EventEmitter;
+var logzionodejs = require('logzio-nodejs');
 
 var apikey = process.argv[2];
 
-var logzio = require('logzio-nodejs').createLogger({
-    token: apikey,
-    type: 'rfs ' + process.version
-});
+var logzio;
+
+if (apikey && apikey !== 'local') {
+    logzio = logzionodejs.createLogger({
+        token: apikey,
+        type: 'rfs ' + process.version
+    });
+} else {
+    logzio = {log: function() {}};
+}
 
 var _ = require('lodash');
 var Combinatorics = require('js-combinatorics');
@@ -191,10 +198,10 @@ function hardcodedStreams() {
 
 var log;
 
-var multiplier = 2.0;
+var multiplier = 4.0;
 
 function slowdown() {
-    multiplier *= 1.03;
+    multiplier *= 1.015;
 }
 
 function speedup() {
@@ -235,66 +242,6 @@ function errorLogger() {
         i += 1;
         active && errorLogger();
     }, (Math.random() * 5000) + 10000 * multiplier);
-}
-
-
-
-var child = 0;
-
-function doChildLogger() {
-
-    if (!active) return;
-
-    child += 1;
-
-    var clog = log.child({child: 'log' + child, childid: uuid.v4()});
-    var childactive = true;
-
-    function debugLogger() {
-        setTimeout(function () {
-            clog.debug({source: "debugLogger", i: i, data: uuid.v4()});
-            i += 1;
-            childactive && debugLogger();
-        }, (Math.random() * 10) + 100 * multiplier);
-    }
-
-    function infoLogger() {
-        setTimeout(function () {
-            clog.info({source: "infoLogger", i: i, data: uuid.v4()});
-            i += 1;
-            childactive && infoLogger();
-        }, (Math.random() * 100) + 500 * multiplier);
-    }
-
-    function warningLogger() {
-        setTimeout(function () {
-            clog.warn({source: "warningLogger", i: i, data: uuid.v4()});
-            i += 1;
-            childactive && warningLogger();
-        }, (Math.random() * 500) + 5000 * multiplier);
-    }
-
-    function errorLogger() {
-        setTimeout(function () {
-            clog.error({source: "errorLogger", i: i, data: uuid.v4()});
-            i += 1;
-            childactive && errorLogger();
-        }, (Math.random() * 500) + 5000 * multiplier);
-    }
-
-    debugLogger();
-    infoLogger();
-    warningLogger();
-    errorLogger();
-
-    setTimeout(function () {
-        childactive = false;
-
-        setTimeout(function () {
-            doChildLogger();
-        }, (Math.random() * 60000) + 120000 * multiplier);
-
-    }, (Math.random() * 60000) + 10000);
 }
 
 mkdirp('testlogs/stress', function () {
@@ -349,13 +296,9 @@ mkdirp('testlogs/stress', function () {
         streams: streams
     });
 
-
-
     debugLogger();
     infoLogger();
     warningLogger();
     errorLogger();
 
-    // doChildLogger();
-    // doChildLogger();
 });
