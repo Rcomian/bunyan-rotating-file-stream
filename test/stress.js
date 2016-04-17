@@ -4,6 +4,9 @@ var uuid = require('uuid');
 var mkdirp = require('mkdirp');
 var EventEmitter = require('events').EventEmitter;
 var logzionodejs = require('logzio-nodejs');
+var fs = require('fs');
+var async = require('async');
+var path = require('path');
 
 var apikey = process.argv[2];
 
@@ -255,8 +258,57 @@ mkdirp('testlogs/stress', function () {
 
     perfMon.on('report', function (report) {
         report.multiplier = multiplier;
-        console.log(report);
-        logzio.log(report);
+
+        var outputpath = 'testlogs/stress';
+
+        async.waterfall([
+            function getFiles(callback) {
+                fs.readdir(outputpath, callback);
+            },
+            function buildPathsOnFiles(files, callback) {
+                async.map(files, function (file, callback) {
+                    callback(null, path.join(outputpath,file));
+                }, callback);
+            },
+            function statEachFile(files, callback) {
+                async.map(files, function (item, callback) {
+                    fs.stat(item, function (err, stat) {
+                        if (err) {
+                            if (err.code === 'ENOENT') {
+                                callback(null, {size: 0});
+                            } else {
+                                callback(err);
+                            }
+                        } else {
+                            callback(null, stat);
+                        }
+                    })
+                }, callback);
+            },
+            function generateStatistics(filestats, callback) {
+                async.reduce(filestats, {count: 0, size: 0}, function (memo, item, callback) {
+                    memo.count += 1;
+                    memo.size += item.size;
+                    callback(null, memo);
+                }, callback);
+            }
+        ], function (err, result) {
+
+            if (err) {
+                console.log('results', arguments);
+                report.files = 0;
+                report.filesize = 0;
+                report.err = err;
+            } else {
+                report.files = result.count;
+                report.filesize = result.size;
+                report.err = null;
+            }
+
+            console.log(report);
+            logzio.log(report);
+        });
+
 
         if (report.period_queued > 100) {
             slowdown();
