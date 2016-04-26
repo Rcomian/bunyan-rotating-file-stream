@@ -316,6 +316,32 @@ function gzippedfiles(template) {
     }
 }
 
+function gzippedfilestotalfiles(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'gzippedfilestotalfiles-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { mkdirp(name, next); },
+            function (next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', threshold: '1m', gzip: true, totalFiles: 4 },
+                batch: { iterations: 100000 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 59283, last: 100000}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(5, files.length);
+                assert.equal(4, _(files).filter( function (f) { return f.slice(-3) === '.gz'; }).value().length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
 function totalsize(template) {
     return function (next) {
         var name = 'testlogs/' + 'totalsize-' + template;
@@ -562,6 +588,15 @@ mkdirp('testlogs', function () {
         gzippedfiles('test-%Y-%m-%d'),
         gzippedfiles('test-%Y-%m-%d-%H-%M-%S'),
         gzippedfiles('test-%N-%Y-%m-%d'),
+        gzippedfilestotalfiles('test'),
+        gzippedfilestotalfiles('test-%N'),
+        gzippedfilestotalfiles('test-%Y-%m-%d'),
+        gzippedfilestotalfiles('test-%Y-%m-%d-%H-%M-%S'),
+        gzippedfilestotalfiles('test-%N-%Y-%m-%d'),
+        gzippedfilestotalfiles('test.%N'),
+        gzippedfilestotalfiles('test.%Y-%m-%d'),
+        gzippedfilestotalfiles('test.%Y-%m-%d-%H-%M-%S'),
+        gzippedfilestotalfiles('test.%N-%Y-%m-%d'),
         totalsize('test'),
         totalsize('test-%N'),
         totalsize('test-%Y-%m-%d'),
