@@ -1,5 +1,11 @@
 # bunyan Changelog
 
+## 1.5.3
+
+- Fixed issue with handling template filenames containing dots: #4
+
+- Can handle this.%Y.log as well as this.%N-%Y.log, which both failed before, when using gzip.
+
 ## 1.5.2
 
 - Expanded node version compatibility and making a statement about which versions of node we offically support- `0.12.9`, `0.12.latest`, `4.latest`, `5.latest`.
