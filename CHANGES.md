@@ -1,5 +1,9 @@
 # bunyan Changelog
 
+## 1.5.4
+
+- Checked with node v6 and updated support notes on the README.
+
 ## 1.5.3
 
 - Fixed issue with handling template filenames containing dots: #4

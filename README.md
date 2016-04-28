@@ -21,14 +21,21 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 # Recent changes
 
-## 1.5.2 Compatibility
+## 1.5 Templates Release
+
+We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
+All previous features are maintained and you should be able to use your existing configuration without change.
+
+Integration testing is still rudimentary in terms of technology, but the coverage has been massively improved, checking that no logs have been re-ordered or lost.
+
+
+# Compatibility
 
 Implemented tests and strategies to support specific node versions:
 
-* 0.12.9
 * 0.12.*latest*
 * 4.*latest*
-* 5.*latest*
+* 6.*latest*
 
 *0.10 and earlier*
 
@@ -38,13 +45,9 @@ Not supported as it is missing a lot of useful path processing features. Whilst 
 
 Is supported, but it's performance cannot keep up with the latest versions of node. I've had to reduce the stress involved when running tests to allow old `0.12` to keep up.
 
+*5*
 
-## 1.5 Templates Release
-
-We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
-All previous features are maintained and you should be able to use your existing configuration without change.
-
-Integration testing is still rudimentary in terms of technology, but the coverage has been massively improved, checking that no logs have been re-ordered or lost.
+Is supported, but won't be stress tested as those resources are being used for the LTS releases 0.12, 4 & 6.
 
 
 # Current Status
