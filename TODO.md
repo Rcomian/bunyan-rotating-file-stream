@@ -5,6 +5,4 @@
     - Filter on simple tag fields
     - Filter on date/time across log files
     - Support gzipped files transparently
-- Templates - Allow logging filenames based on templates
-    - Datestamps - organise files by creation time rather than number
 

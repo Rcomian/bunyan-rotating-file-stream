@@ -1,5 +1,10 @@
 # bunyan Changelog
 
+## 1.6.0
+
+- Support writing logs that aren't in bunyan's normal JSON format. Or JSON at all.
+- Officially moved tests to node 6
+
 ## 1.5.4
 
 - Checked with node v6 and updated support notes on the README.

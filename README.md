@@ -21,6 +21,10 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 # Recent changes
 
+## 1.6 Support for non-JSON logs
+
+Minor release but now that logs which are written in a non-json format are supported.
+
 ## 1.5 Templates Release
 
 We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
