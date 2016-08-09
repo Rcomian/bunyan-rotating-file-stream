@@ -1,5 +1,9 @@
 # bunyan Changelog
 
+## 1.6.1
+
+- Copying the options object given from the caller as it may be immutable and we like to change things, set defaults, etc.
+
 ## 1.6.0
 
 - Support writing logs that aren't in bunyan's normal JSON format. Or JSON at all.
