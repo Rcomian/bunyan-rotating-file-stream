@@ -6,51 +6,54 @@ var PeriodTrigger = require('./lib/periodtrigger');
 var InitialPeriodTrigger = require('./lib/initialperiodtrigger');
 var ThresholdTrigger = require('./lib/thresholdtrigger');
 var TriggerAdapter = require('./lib/triggeradapter');
+var _ = require('lodash');
 
 var path = require('path');
 
 var existingFilesStreams = {};
 
-
 function RotatingFileStreamFactory(options) {
-    if (typeof (options.path) !== 'string') {
+    // options_in might be readonly, copy so that we can modify as needed
+    var options_copy = _.extend({}, options);
+
+    if (typeof (options_copy.path) !== 'string') {
         throw new Error('Must provide a string for path');
     }
 
-    options.path = path.resolve(options.path);
+    options_copy.path = path.resolve(options_copy.path);
 
-    var rfs = existingFilesStreams[options.path];
+    var rfs = existingFilesStreams[options_copy.path];
 
     if (!rfs) {
-        rfs = RotatingFileStream(options);
+        rfs = RotatingFileStream(options_copy);
 
-        existingFilesStreams[options.path] = rfs;
+        existingFilesStreams[options_copy.path] = rfs;
 
         rfs.once('shutdown', function () {
-            existingFilesStreams[options.path] = null;
+            existingFilesStreams[options_copy.path] = null;
         });
 
-        if (options.period) {
-            var periodTrigger = PeriodTrigger(options);
+        if (options_copy.period) {
+            var periodTrigger = PeriodTrigger(options_copy);
             TriggerAdapter(periodTrigger, rfs);
         }
 
-        if (options.period && options.rotateExisting) {
-            var initialPeriodTrigger = InitialPeriodTrigger(options);
+        if (options_copy.period && options_copy.rotateExisting) {
+            var initialPeriodTrigger = InitialPeriodTrigger(options_copy);
             TriggerAdapter(initialPeriodTrigger, rfs);
         }
 
-        if (options.threshold) {
-            var thresholdTrigger = ThresholdTrigger(options);
+        if (options_copy.threshold) {
+            var thresholdTrigger = ThresholdTrigger(options_copy);
             TriggerAdapter(thresholdTrigger, rfs);
         }
 
         rfs.initialise();
 
-    } else if (options.shared !== true ||
-               existingFilesStreams[options.path].shared !== true) {
+    } else if (options_copy.shared !== true ||
+               existingFilesStreams[options_copy.path].shared !== true) {
         throw new Error('You should not create multiple rotating file ' +
-         'streams against the same file: ' + options.path);
+         'streams against the same file: ' + options_copy.path);
     }
 
     return rfs;
