@@ -19,26 +19,34 @@ then
 fi
 
 echo ${VERSIONS[@]}
-for arg in ${VERSIONS[@]}
+for nodeversion in ${VERSIONS[@]}
 do
-    nvm install $arg
+    nvm install $nodeversion
 
     rm -Rf node_modules
-    nvm exec $arg npm install
+    nvm exec $nodeversion npm install
 
     echo
     echo "Test functionality"
-    time nvm exec $arg node test/functionality
+    time nvm exec $nodeversion node test/functionality
+
+    if [ $? -eq 0 ]
+    then
+        echo "Passed"
+    else
+        echo "Aborting"
+        exit 1
+    fi
 
     echo
     echo "Test performance"
-    time nvm exec $arg node test/performance
+    time nvm exec $nodeversion node test/performance
 
     if [ $# -eq 2 ]
     then
         echo
         echo "Stress test starting"
-        nvm exec $arg node test/stress ${APIKEY}
+        nvm exec $nodeversion node test/stress ${APIKEY}
     fi
 done
 
