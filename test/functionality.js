@@ -27,9 +27,6 @@ function fixpid(log) {
     return log;
 }
 
-// Prior to node v4, high load scenarios (like these tests) can starve timer events
-var logdelay = semver.lt(process.version, '4.0.0') ? 20 : 0;
-
 function runTest(name, options, next) {
     var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log', map: fixpid }, options.stream));
 
@@ -42,19 +39,23 @@ function runTest(name, options, next) {
     });
 
     rfs.on('error', function (err) {
-        console.log('err', err);
-        throw err;
+        console.log('err', err, name);
+        next(err + ' ' + name);
     });
 
     rfs.on('losingdata', function () {
         if (ia) clearInterval(ia);
         if (maintimer) clearTimeout(maintimer);
 
+        console.log('Losing data - abandon test: ' + name);
         next('Losing data - abandon test: ' + name);
     });
 
     var i = 1;
     var batch = _.extend({}, { size: 10 }, options.batch);
+
+    // Prior to node v4, high load scenarios (like these tests) can starve timer events
+    var logdelay = batch.delay || (semver.lt(process.version, '4.0.0') ? 20 : 0);
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
@@ -138,7 +139,7 @@ function checkFileConsistency(directory, opts, next) {
             }, function done(err) {
 
                 if (opts.last) {
-                    assert.equal(opts.last, nextExpectedId, 'last expected: ' + opts.last + ', got: ' + nextExpectedId);
+                    assert.equal(opts.last, nextExpectedId, directory + ' last expected: ' + opts.last + ', got: ' + nextExpectedId);
                 }
 
                 next(err);
@@ -224,14 +225,14 @@ function toosmallthresholdstillgetswrites(template) {
             function (next) { mkdirp(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: 1, totalFiles: 502 },
-                batch: { iterations: 100 }
+                batch: { size: 1, delay: 500, iterations: 10 }
             }, next); },
             function (next) {
-                checkFileConsistency(name, {first: 1, last: 100}, next);
+                checkFileConsistency(name, {first: 1, last: 10}, next);
             },
             function (next) {
                 var files = fs.readdirSync(name);
-                assert.equal(99, files.length);
+                assert.equal(9, files.length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
