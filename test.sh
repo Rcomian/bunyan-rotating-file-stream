@@ -3,7 +3,13 @@
 . ~/.nvm/nvm.sh
 . ~/.bashrc
 
-declare -a VERSIONS=("0.12.9" "0.12" "4" "6")
+declare -a VERSIONS=("0.12.9" "0.12" "4" "6" "7")
+
+if [ $# -eq 1 ]
+then
+    VERSIONS=($1)
+    echo "Single version, no stress test"
+fi
 
 if [ $# -eq 2 ]
 then
