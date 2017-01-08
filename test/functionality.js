@@ -52,6 +52,7 @@ function runTest(name, options, next) {
     });
 
     var i = 1;
+    var offset = (options.batch.startAt || 1) - 1;
     var batch = _.extend({}, { size: 10 }, options.batch);
 
     // Prior to node v4, high load scenarios (like these tests) can starve timer events
@@ -59,7 +60,7 @@ function runTest(name, options, next) {
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {
-            log.info({node: 'a', i: i});
+            log.info({node: 'a', i: i + offset});
             i += 1;
 
             if (typeof (batch.iterations) !== 'undefined' && i >= batch.iterations) {
@@ -393,6 +394,45 @@ function totalfiles(template) {
     }
 }
 
+function rotateExisting(template) {
+    return function (next) {
+        var name = 'testlogs/' + 'rotateExisting-' + template;
+
+        async.series([
+            function (next) { rmdir(name, ignoreMissing(next)); },
+            function (next) { mkdirp(name, next); },
+            function createBaseFile(next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: '1000ms', rotateExisting: true },
+                batch: { startAt: 1, iterations: 100 }
+            }, next); },
+            function waitLongTime(next) { 
+                setTimeout(next, 2000);
+            },
+            function writeToNewFile(next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: '1000ms', rotateExisting: true },
+                batch: { startAt: 100, iterations: 101 }
+            }, next); },
+            function waitShortTime(next) { 
+                setTimeout(next, 100);
+            },
+            function writeToExistingFile(next) { runTest (name, {
+                stream: { path: name + '/' + template + '.log', period: '1000ms', rotateExisting: true },
+                batch: { startAt: 200, iterations: 101 }
+            }, next); },
+            function (next) {
+                checkFileConsistency(name, {first: 1, last: 300}, next);
+            },
+            function (next) {
+                var files = fs.readdirSync(name);
+                assert.equal(2, files.length);
+                console.log(name.replace('%d', '%%d'), 'passed');
+                next();
+            },
+            function (next) { rmdir(name, ignoreMissing(next)); }
+        ], next);
+    }
+}
+
 function shorthandperiod(template) {
     return function (next) {
         var name = 'testlogs/' + 'shorthandperiod-' + template;
@@ -623,6 +663,11 @@ mkdirp('testlogs', function () {
         toosmallthresholdstillgetswrites('test-%Y-%m-%d'),
         toosmallthresholdstillgetswrites('test-%Y-%m-%d-%H-%M-%S'),
         toosmallthresholdstillgetswrites('test-%N-%Y-%m-%d'),
+        rotateExisting('test'),
+        rotateExisting('test-%N'),
+        rotateExisting('test-%Y-%m-%d'),
+        rotateExisting('test-%Y-%m-%d-%H-%M-%S'),
+        rotateExisting('test-%N-%Y-%m-%d'),
 
         checkrotationofoldfile,
         checkrotationofnewfile,

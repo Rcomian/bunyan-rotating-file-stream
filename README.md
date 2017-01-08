@@ -21,6 +21,11 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 # Recent changes
 
+## 1.6.1 Fixed support for the "rotateExisting" flag
+
+Tests have been added to ensure that this feature keeps working in the future.
+Note that this feature may not work as expected with linux on EXT4.
+
 ## 1.6 Support for non-JSON logs
 
 Minor release but now that logs which are written in a non-json format are supported.
@@ -40,6 +45,7 @@ Implemented tests and strategies to support specific node versions:
 * 0.12.*latest*
 * 4.*latest*
 * 6.*latest*
+* 7.*latest*
 
 *0.10 and earlier*
 
@@ -172,7 +178,10 @@ the scope: top of the hour (h), midnight (d), start of Sunday (w), start of the
 <td>If period is also set, will rotate an existing log file when the process
 starts up if that file needs rotating due to its age. This means that
 if you want a new file every day, and the process isn't running over midnight,
-this option will give you that new file when you next startup.</td>
+this option will give you that new file when you next startup.
+
+See note on EXT4.
+</td>
 </tr>
 <tr>
 <td>threshold</td>
@@ -232,6 +241,20 @@ force the stream to create a new file instead.</p>
 </td>
 </tr>
 </table>
+
+## rotateExisting and Linux filesystems (EXT4) support
+
+Some filesystems on Linux (in particular EXT4) do not record the file creation date.
+
+Since the rotateExisting requires us to look at this date to see if the file would have been rotated had the
+system been running for all that time, this feature cannot work as required.
+
+You can check if this feature will work on your filesystem by executing `stat [mylogfile]`. If the "Birth" field
+has a value in it, rfs will be able to see the creation time correctly.
+
+Otherwise behaviour of this flag will be based on what birthtime is filled with. If it returns 0, then the file
+will always be rotated. If it returns ctime, it will only be rotated if the rotation period has expired since the
+last write.
 
 # Templating
 
