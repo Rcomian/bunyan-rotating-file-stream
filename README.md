@@ -21,7 +21,7 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 # Recent changes
 
-## 1.6.1 Fixed support for the "rotateExisting" flag
+## 1.6.2 Fixed support for the "rotateExisting" flag
 
 Tests have been added to ensure that this feature keeps working in the future.
 Note that this feature may not work as expected with linux on EXT4.
