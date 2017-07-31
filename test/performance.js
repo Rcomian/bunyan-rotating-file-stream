@@ -91,8 +91,8 @@ function throughput(next) {
             assert.equal(1, files.length, 'Expected 1 file, found: ' + JSON.stringify(files));
             console.log(name, 'passed');
             next();
-        },
-        function (next) { rmdir(name, ignoreMissing(next)); }
+        }//,
+        //function (next) { rmdir(name, ignoreMissing(next)); }
     ], next);
 }
 
