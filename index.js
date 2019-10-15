@@ -26,6 +26,9 @@ function RotatingFileStreamFactory(options) {
 
     if (!rfs) {
         rfs = RotatingFileStream(options_copy);
+        rfs.on('gzip_finish', path => {
+            options.on_gzip_finish && options.on_gzip_finish(path);
+        });
 
         existingFilesStreams[options_copy.path] = rfs;
 
