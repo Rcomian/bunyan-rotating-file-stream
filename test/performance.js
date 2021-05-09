@@ -2,8 +2,7 @@ var bunyan = require('bunyan');
 var _ = require('lodash');
 var fs = require('fs');
 var assert = require('assert');
-var mkdirp = require('mkdirp');
-var rmdir = require('rmdir');
+var fse = require('fs-extra');
 var RotatingFileStream = require('../index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('../lib/initialperiodtrigger');
@@ -80,8 +79,8 @@ function throughput(next) {
     var name = 'testlogs/' + 'throughput';
 
     async.series([
-        function (next) { rmdir(name, ignoreMissing(next)); },
-        function (next) { mkdirp(name, next); },
+        function (next) { fse.remove(name, next); },
+        function (next) { fse.ensureDir(name, next); },
         function (next) { runTest (name, {
             stream: { path: name + '/test-%Y.log', noCyclesCheck: true },
             batch: { iterations: 1000000, size: 1000 }
@@ -92,7 +91,7 @@ function throughput(next) {
             console.log(name, 'passed');
             next();
         }//,
-        //function (next) { rmdir(name, ignoreMissing(next)); }
+        //function (next) { fse.remove(name, next); }
     ], next);
 }
 

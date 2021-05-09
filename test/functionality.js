@@ -4,8 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var readline = require('readline');
 var assert = require('assert');
-var mkdirp = require('mkdirp');
-var rmdir = require('rmdir');
+var fse = require('fs-extra');
 var RotatingFileStream = require('../index');
 var async = require('async');
 var InitialPeriodRotateTrigger = require('../lib/initialperiodtrigger');
@@ -164,8 +163,8 @@ function basicthreshold(template) {
         var name = 'testlogs/' + 'basicthreshold-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', fieldOrder: ['pid', 'time'] },
                 batch: { iterations: 50000 }
@@ -179,7 +178,7 @@ function basicthreshold(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -189,8 +188,8 @@ function forcenewfile(template, forcenew) {
         var name = 'testlogs/' + 'forcenewfile-' + template + (forcenew ? '-newfile' : '-reused');
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', startNewFile: forcenew, threshold: 800 },
                 batch: { iterations: 10 }
@@ -212,7 +211,7 @@ function forcenewfile(template, forcenew) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -222,8 +221,8 @@ function toosmallthresholdstillgetswrites(template) {
         var name = 'testlogs/' + 'toosmallthresholdstillgetswrites-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: 1, totalFiles: 502 },
                 batch: { size: 1, delay: 500, iterations: 10 }
@@ -237,7 +236,7 @@ function toosmallthresholdstillgetswrites(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -247,8 +246,8 @@ function timerotation(template) {
         var name = 'testlogs/' + 'timerotation-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: '1000ms' },
                 batch: { duration: 9500 }
@@ -262,7 +261,7 @@ function timerotation(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -272,8 +271,8 @@ function timerotationnologging(template) {
         var name = 'testlogs/' + 'timerotationnologging-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: '1000ms' },
                 batch: { size: 0, duration: 9500 }
@@ -287,7 +286,7 @@ function timerotationnologging(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -297,8 +296,8 @@ function gzippedfiles(template) {
         var name = 'testlogs/' + 'gzippedfiles-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', gzip: true },
                 batch: { iterations: 50000 }
@@ -313,7 +312,7 @@ function gzippedfiles(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -323,8 +322,8 @@ function gzippedfilestotalfiles(template) {
         var name = 'testlogs/' + 'gzippedfilestotalfiles-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', gzip: true, totalFiles: 4 },
                 batch: { iterations: 100000 }
@@ -339,7 +338,7 @@ function gzippedfilestotalfiles(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -349,8 +348,8 @@ function totalsize(template) {
         var name = 'testlogs/' + 'totalsize-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', totalSize: '3m' },
                 batch: { iterations: 50000 }
@@ -364,7 +363,7 @@ function totalsize(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -374,8 +373,8 @@ function totalfiles(template) {
         var name = 'testlogs/' + 'totalfiles-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', threshold: '1m', totalFiles: 3 },
                 batch: { iterations: 50000 }
@@ -389,7 +388,7 @@ function totalfiles(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -399,8 +398,8 @@ function rotateExisting(template) {
         var name = 'testlogs/' + 'rotateExisting-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function createBaseFile(next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: '1000ms', rotateExisting: true },
                 batch: { startAt: 1, iterations: 100 }
@@ -428,7 +427,7 @@ function rotateExisting(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -438,8 +437,8 @@ function shorthandperiod(template) {
         var name = 'testlogs/' + 'shorthandperiod-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) { runTest (name, {
                 stream: { path: name + '/' + template + '.log', period: 'hourly'},
                 batch: { iterations: 100 }
@@ -453,7 +452,7 @@ function shorthandperiod(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -463,8 +462,8 @@ function multiplerotatorsonsamefile(template) {
         var name = 'testlogs/' + 'multiplerotatorsonsamefile-' + template;
 
         async.series([
-            function (next) { rmdir(name, ignoreMissing(next)); },
-            function (next) { mkdirp(name, next); },
+            function (next) { fse.remove(name, next); },
+            function (next) { fse.ensureDir(name, next); },
             function (next) {
                 runTest (name, {
                     stream: { path: name + '/' + template + '.log', period: '1000ms', shared: true },
@@ -483,7 +482,7 @@ function multiplerotatorsonsamefile(template) {
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
-            function (next) { rmdir(name, ignoreMissing(next)); }
+            function (next) { fse.remove(name, next); }
         ], next);
     }
 }
@@ -597,7 +596,7 @@ function checksetlongtimeoutclearnormalperiods(next) {
     }, 11000);
 }
 
-mkdirp('testlogs', function () {
+fse.ensureDir('testlogs', function () {
 
     async.parallel([
         basicthreshold('test'),
