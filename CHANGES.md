@@ -1,5 +1,14 @@
 # bunyan Changelog
 
+## 2.0.0
+
+- Refreshing node versions - now only supports nodejs v12+
+- Bump dependencies to latest versions
+- Update lib/filerotator.js
+- Emit gzip_finish event
+- Removing redundant bunyan dependency
+- Check for undefined mtime
+
 ## 1.6.1
 
 - Copying the options object given from the caller as it may be immutable and we like to change things, set defaults, etc.
