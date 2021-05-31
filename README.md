@@ -23,7 +23,7 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 ## 2.0.0 Version refresh
 
-Updated dependencies and engine support (now v12+ for bug reports).
+Updated dependencies and engine support (now v14+). This will allow me to refactor using the latest javascript syntax.
 Minor enhancements and stability fixes (see changelog).
 
 ## 1.6.3 Type definition file for Typescript

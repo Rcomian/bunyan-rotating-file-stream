@@ -10,7 +10,7 @@
     "url": "git://github.com/Rcomian/bunyan-rotating-file-stream.git"
   },
   "engines": {
-    "node": ">=10.24.1"
+    "node": ">=14.17.0"
   },
   "keywords": [
     "log",

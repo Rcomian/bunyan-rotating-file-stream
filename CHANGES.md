@@ -2,7 +2,7 @@
 
 ## 2.0.0
 
-- Refreshing node versions - now only supports nodejs v12+
+- Refreshing node versions - now only supports nodejs v14+
 - Bump dependencies to latest versions
 - Update lib/filerotator.js
 - Emit gzip_finish event
