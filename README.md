@@ -225,7 +225,7 @@ eg, '100k', '1m', '2g' etc.</td>
 <td>fieldOrder</td>
 <td>No</td>
 <td></td>
-<td><p>An array of string that specify the order the log parameters are written to the file.</p>
+<td><p>An array of strings that specify the order the log parameters are written to the file.</p>
 
 <p>This option allows certain keys in the log fields to be written first for each log entry in the file.
 For example, if you use the value ['time'], the timestamp will appear on the left of each row.
