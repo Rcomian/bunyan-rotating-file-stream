@@ -26,7 +26,6 @@
     "bunyan": "^1.8.15",
     "fs-extra": "^10.0.0",
     "js-combinatorics": "^1.4.5",
-    "logzio-nodejs": "^2.0.2",
     "uuid": "^8.3.2",
     "why-is-node-running": "^2.2.0"
   },

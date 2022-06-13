@@ -3,23 +3,11 @@ var bunyan = require('bunyan');
 var uuid = require('uuid');
 var mkdirp = require('mkdirp');
 var EventEmitter = require('events').EventEmitter;
-var logzionodejs = require('logzio-nodejs');
 var fs = require('fs');
 var async = require('async');
 var path = require('path');
 
 var apikey = process.argv[2];
-
-var logzio;
-
-if (apikey && apikey !== 'local') {
-    logzio = logzionodejs.createLogger({
-        token: apikey,
-        type: 'rfs ' + process.version
-    });
-} else {
-    logzio = {log: function() {}};
-}
 
 var _ = require('lodash');
 var Combinatorics = require('js-combinatorics');
@@ -306,7 +294,6 @@ mkdirp('testlogs/stress', function () {
             }
 
             console.log(report);
-            logzio.log(report);
         });
 
 
