@@ -1,3 +1,5 @@
+# Bunyan Rotating File Stream
+
 Bunyan Rotating File Stream is a stream component for the logging system "node bunyan" that provides rich and flexible control over your log files.
 
 [![Join the chat at https://gitter.im/Rcomian/bunyan-rotating-file-stream](https://badges.gitter.im/Rcomian/bunyan-rotating-file-stream.svg)](https://gitter.im/Rcomian/bunyan-rotating-file-stream?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -19,35 +21,34 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
     });
 ```
 
-# Recent changes
+## Recent changes
 
-## 2.0.0 Version refresh
+### 2.0.0 Version refresh
 
 Updated dependencies and engine support (now v14+). This will allow me to refactor using the latest javascript syntax.
 Minor enhancements and stability fixes (see changelog).
 
-## 1.6.3 Type definition file for Typescript
+### 1.6.3 Type definition file for Typescript
 
 Generously provided by: scippio
 
-## 1.6.2 Fixed support for the "rotateExisting" flag
+### 1.6.2 Fixed support for the "rotateExisting" flag
 
 Tests have been added to ensure that this feature keeps working in the future.
 Note that this feature may not work as expected with linux on EXT4.
 
-## 1.6 Support for non-JSON logs
+### 1.6 Support for non-JSON logs
 
 Minor release but now that logs which are written in a non-json format are supported.
 
-## 1.5 Templates Release
+### 1.5 Templates Release
 
 We now have the ability to specify templates in the log's filename. For full details see the templating section, but briefly: we can template where you put the number when rotating files (this allows you to preserve the extension so that the files open in the correct viewer), or give your log filename a timestamp in your preferred format.
 All previous features are maintained and you should be able to use your existing configuration without change.
 
 Integration testing is still rudimentary in terms of technology, but the coverage has been massively improved, checking that no logs have been re-ordered or lost.
 
-
-# Compatibility
+## Compatibility
 
 Implemented tests and strategies to support specific node versions:
 
@@ -56,20 +57,19 @@ Implemented tests and strategies to support specific node versions:
 * 6.*latest*
 * 7.*latest*
 
-*0.10 and earlier*
+### 0.10 and earlier
 
 Not supported as it is missing a lot of useful path processing features. Whilst we could patch this with inline code and npm packages, I think it's a shame to have these hanging around when the functionality will be built into all future versions of node.
 
-*0.12*
+### 0.12
 
 Is supported, but it's performance cannot keep up with the latest versions of node. I've had to reduce the stress involved when running tests to allow old `0.12` to keep up.
 
-*5*
+### 5
 
 Is supported, but won't be stress tested as those resources are being used for the LTS releases 0.12, 4 & 6.
 
-
-# Current Status
+## Current Status
 
 The basics of the features are there, you should be able to use the
 rotating file logging to limit disk space usage while maximising
@@ -79,29 +79,27 @@ There are a few extra features to add to the system, but in general it needs sta
 
 We can now regularly run feature tests against all supported versions of node.
 
-
-# Planned Future Features
+## Planned Future Features
 
 * Prevent multiple processes logging to the same file
 * Allow multiple processes to safely log to the same file
 * Allow you to say where to put the number in date formatted file names
 
-# Installation
+## Installation
 
 ```sh
 npm install bunyan-rotating-file-stream
 ```
 
-# Main Features
+## Main Features
 
-- Name log files with templates
-- Rotate to a new log file periodically (can also rotate on startup to clean old log files)
-- Rotate to a new log file once the main log file goes over a certain size
-- Keep a maximum number of archival log files
-- Delete older log files once the archive reaches a certain size
-- GZip archived log files
-- Supports being a raw stream or a normal stream
-
+* Name log files with templates
+* Rotate to a new log file periodically (can also rotate on startup to clean old log files)
+* Rotate to a new log file once the main log file goes over a certain size
+* Keep a maximum number of archival log files
+* Delete older log files once the archive reaches a certain size
+* GZip archived log files
+* Supports being a raw stream or a normal stream
 
 ## How to use
 
@@ -251,7 +249,7 @@ force the stream to create a new file instead.</p>
 </tr>
 </table>
 
-## rotateExisting and Linux filesystems (EXT4) support
+### rotateExisting and Linux filesystems (EXT4) support
 
 Some filesystems on Linux (in particular EXT4) do not record the file creation date.
 
@@ -265,28 +263,28 @@ Otherwise behaviour of this flag will be based on what birthtime is filled with.
 will always be rotated. If it returns ctime, it will only be rotated if the rotation period has expired since the
 last write.
 
-# Templating
+## Templating
 
-## Behaviour without templating
+### Behaviour without templating
 
 By default, if you just give a normal filename for your log, it will be rotated by appending a number to the end of the file.
 
 For example, if you log to a file `webapi.log`, you'll have the following in your log directory:
 
-```
+```text
     webapi.log  // log file having logs written to it.
 ```
 
 When the file needs to be rotated, we'll rename the existing file to `webapi.log.1` and create a new empty file `webapi.log`. Giving you:
 
-```
+```text
     webapi.log   // new log file, logs will be written here.
     webapi.log.1 // old log file, for archival only.
 ```
 
 When we rotate again, we rename the `.1` file to `.2`, the log file to `.1` and create another file, giving us:
 
-```
+```text
     webapi.log   // new log file, logs will be written here.
     webapi.log.1 // archive of the previously active log file.
     webapi.log.2 // oldest log file containing oldest entries.
@@ -294,13 +292,13 @@ When we rotate again, we rename the `.1` file to `.2`, the log file to `.1` and 
 
 As you can see, the extension of the log files is effectively changed to a number, making it lose its association with any tool that you use to open log files and look at them.
 
-## Rotation number templating [%N]
+### Rotation number templating [%N]
 
 We can tell the system where to insert the rotation number in the filename. To do this, use the `%N` template parameter (uppercase N). This parameter can only appear in the filename, not in the directories or the extension.
 
 If you use the parameter to make `webapi.%N.log`, after the 2 rotations as above, we end up with:
 
-```
+```text
     webapi.log   // the log file receiving new logs.
     webapi.1.log // archive of the previously active log file.
     webapi.2.log // oldest log file containing oldest entries.
@@ -310,7 +308,7 @@ Notice that the %N has been stripped out of the name for the active log file - w
 
 This preserves both the numbering system of the archived files and their extension, so we can open them with the correct tool when we click on them.
 
-## Datetime templating [%Y %m %d %H %M %S]
+### Datetime templating [%Y %m %d %H %M %S]
 
 We can also insert the current time into the log file name. This is the time that the log file was created and should contain logs from that time onwards (notice: this is a hint, not a guarantee: there may be some stragglers from the previous file).
 
@@ -321,17 +319,17 @@ The template parameters must be in the main body of the filename and cannot be i
 
 As an example, we can use the a log name for our system like: `webapi.%d-%b-%y.log`. If we then rotated twice, on separate days, we'd end up with the following files:
 
-```
+```text
     webapi.28-Feb-16.log // Oldest file containing the oldest logs
     webapi.29-Feb-16.log
     webapi.01-Mar-16.log // Current file receiving logs
 ```
 
-### Filename clashes
+#### Filename clashes
 
 The file stream makes no requirement that your filename be particularly unique or sort sensibly in any way. If in the previous example, we rotated twice on the same day, we'd differentiate the files by adding a number like this:
 
-```
+```text
     webapi.28-Feb-16.log   // Original file containing the oldest logs
     webapi.28-Feb-16.1.log
     webapi.28-Feb-16.2.log // Current file receiving logs
@@ -339,7 +337,7 @@ The file stream makes no requirement that your filename be particularly unique o
 
 As with rotating number templating, you can specify where this differentiating number goes using %N.
 
-### Deleting old files
+#### Deleting old files
 
 When deleting files based on how many archive files we want to keep, or how much space we want to give to log archives, we delete the oldest files based on the modified time of that file.
 
@@ -350,24 +348,24 @@ When we look for files to delete, we look at all the files in the directory that
 
 Any files matching those criteria are considered part of the logging system and will be deleted based on the normal deletion rules.
 
-# Creating new files on startup
+## Creating new files on startup
 
 When we startup we look for any existing log files to append to. If we find a viable file, we simply open it and start appending logs to it. This is the behaviour for all files, whether templated or not.
 
-## Rotating old files [{rotateExisting: true}]
-If an old file should have been rotated but your process wasn't running at the time (maybe you choose to have a new file every day, but the process wasn't running at midnight), we will still append to it. Force a rotation on old files using the option: `{rotateExisting: true}`. This will only rotate files that would have been rotated had we stayed running. This option works for templated or non-templated files.
+### Rotating old files [{rotateExisting: true}]
 
+If an old file should have been rotated but your process wasn't running at the time (maybe you choose to have a new file every day, but the process wasn't running at midnight), we will still append to it. Force a rotation on old files using the option: `{rotateExisting: true}`. This will only rotate files that would have been rotated had we stayed running. This option works for templated or non-templated files.
 
 **Note 1: Timestamp in filename**: If your log files have a timestamp in the filename, the timestamp will match when the file would have last rotated, not the current time.
 
 **Note 2: Size thresholds**: If a file would be rotated because of a change in threshold size between runs, then that rotation will happen on the first log write as normal regardless of any flags that are set.
 
-## Force new files [{startNewFile: true}]
+### Force new files [{startNewFile: true}]
+
 Instead of appending logs to an existing file, you can force a new file to be created using the option: `{startNewFile: true}`.
 If the file date stamp clashes with an existing file, the dotted number notation will be used as normal.
 
-
-# Versioning
+## Versioning
 
 The scheme I follow is most succinctly described by the bootstrap guys
 [here](https://github.com/twitter/bootstrap#versioning).
@@ -376,10 +374,10 @@ tl;dr: All versions are `<major>.<minor>.<patch>` which will be incremented for
 breaking backward compat and major reworks, new features without breaking
 change, and bug fixes, respectively.
 
-# License
+## License
 
 MIT. See "LICENSE.txt".
 
-# See Also
+## See Also
 
-- Bunyan: <https://github.com/trentm/node-bunyan>.
+* Bunyan: <https://github.com/trentm/node-bunyan>.
