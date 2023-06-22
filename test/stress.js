@@ -7,7 +7,7 @@ var fs = require('fs');
 var async = require('async');
 var path = require('path');
 
-var _ = require('lodash');
+var extend = require('lodash/extend');
 var Combinatorics = require('js-combinatorics');
 
 function validConfig(config) {
@@ -112,7 +112,7 @@ function PerfMon() {
 
     }, 10000);
 
-    return _.extend({}, {
+    return extend({}, {
         addStream: addStream
     }, base);
 }

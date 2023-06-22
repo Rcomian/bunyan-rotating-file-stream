@@ -1,5 +1,5 @@
 var bunyan = require('bunyan');
-var _ = require('lodash');
+var extend = require('lodash/extend');
 var fs = require('fs');
 var path = require('path');
 var readline = require('readline');
@@ -27,7 +27,7 @@ function fixpid(log) {
 }
 
 function runTest(name, options, next) {
-    var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log', map: fixpid }, options.stream));
+    var rfs = RotatingFileStream(extend({}, { path: 'foo.log', map: fixpid }, options.stream));
 
     var log = bunyan.createLogger({
         name: 'foo',
@@ -52,7 +52,7 @@ function runTest(name, options, next) {
 
     var i = 1;
     var offset = (options.batch.startAt || 1) - 1;
-    var batch = _.extend({}, { size: 10 }, options.batch);
+    var batch = extend({}, { size: 10 }, options.batch);
 
     // Prior to node v4, high load scenarios (like these tests) can starve timer events
     var logdelay = batch.delay || (semver.lt(process.version, '4.0.0') ? 20 : 0);
