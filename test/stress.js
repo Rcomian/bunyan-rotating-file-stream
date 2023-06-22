@@ -7,21 +7,8 @@ var fs = require('fs');
 var async = require('async');
 var path = require('path');
 
-var apikey = process.argv[2];
-
 var _ = require('lodash');
 var Combinatorics = require('js-combinatorics');
-
-var combinations = {
-    level: ['debug', 'info', 'warn', 'error', 'fatal'],
-    period: ['1m', '1h', '1d', '1m', ''],
-    threshold: [0, 1, 10240, '100k', '1m', '1g'],
-    totalFiles: [0, 1, 2, 5, 10, 20],
-    totalSize: [0, '100k', '1m', '10m', '100m', '1g'],
-    rotateExisting: [true, false],
-    startNewFile: [true, false],
-    gzip: [true, false]
-};
 
 function validConfig(config) {
     var valid =
