@@ -29,6 +29,9 @@
     "uuid": "^8.3.2",
     "why-is-node-running": "^2.2.0"
   },
+  "peerDependencies": {
+    "bunyan": "^1.8.15"
+  },
   "dependencies": {
     "async": "^3.2.0",
     "lodash": "^4.17.21",
