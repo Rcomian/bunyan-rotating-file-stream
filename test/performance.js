@@ -5,7 +5,6 @@ var assert = require('assert');
 var fse = require('fs-extra');
 var RotatingFileStream = require('../index');
 var async = require('async');
-var InitialPeriodRotateTrigger = require('../lib/initialperiodtrigger');
 var whyRunning;
 
 try {
