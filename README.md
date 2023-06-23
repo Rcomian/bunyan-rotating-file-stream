@@ -23,6 +23,24 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 ## Recent changes
 
+### 2.0.4 Security
+
+Security patches from dependabot
+Making bunyan a peer dependencies
+Some code tidy
+
+### 2.0.3 Security
+
+Security patches from dependabot
+
+### 2.0.2 Nodejs v18
+
+Added tests to support nodejs v18
+
+### 2.0.1 Security
+
+Security patches from dependabot
+
 ### 2.0.0 Version refresh
 
 Updated dependencies and engine support (now v14+). This will allow me to refactor using the latest javascript syntax.

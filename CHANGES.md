@@ -1,5 +1,28 @@
 # bunyan Changelog
 
+## 2.0.4
+
+- (Kevin Brown) Make bunyan a peer dependency
+- (Kevin Brown) Remove unused imports and variables
+- (dependabot) Bump semver from 7.3.5 to 7.5.2
+
+## 2.0.3
+
+- Remove typos and unnecessary dependency
+- Fix markup linter warnings
+- (dependabot) Bump minimatch from 3.0.4 to 3.1.2
+- (dependabot) Bump moment from 2.29.2 to 2.29.4
+
+
+## 2.0.2
+
+- Improve test suite - support nodejs v18 & remove logzio
+
+## 2.0.1
+
+- (dependabot) Bump minimist from 1.2.5 to 1.2.6
+- (dependabot) Bump moment from 2.29.1 to 2.29.2
+
 ## 2.0.0
 
 - Refreshing node versions - now only supports nodejs v14+

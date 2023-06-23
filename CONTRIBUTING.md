@@ -4,7 +4,6 @@ Thanks for using node-bunyan and for considering contributing to it! Or perhaps
 you are just here to get a sniff for what is going on with node-bunyan
 development.
 
-
 ## How you can help
 
 If you want to help me here, great! Thank you! Some ideas:
@@ -30,7 +29,6 @@ If you want to help me here, great! Thank you! Some ideas:
 
 [Type-Question]: https://github.com/trentm/node-bunyan/issues?q=is%3Aopen+is%3Aissue+label%3AType-Question
 
-
 ## Trent's Biased Rules for Code
 
 In the hope that it makes it easier to get PRs into Bunyan, here is my biased
@@ -38,11 +36,7 @@ list of what I typically want. Submitting a PR without all of these is
 *totally fine*! The only side-effect is that it may take longer for me to
 provide feedback on it and merge it. I'll politely request missing pieces.
 
-
-- Please follow existing code style. Contributed code must pass `make check`.
-  (Note: I intended to [change to eslint
-  soon](https://github.com/trentm/node-bunyan/issues/341), so currently `make
-  check` might be a moving target.)
+- Please follow existing code style. Contributed code must pass `test.sh`.
 
 - Any user visible change in behaviour should almost certainly include an
   update to the docs. Currently the "docs" is the README.md.
