@@ -1,5 +1,5 @@
 var bunyan = require('bunyan');
-var _ = require('lodash');
+var extend = require('lodash/extend');
 var fs = require('fs');
 var assert = require('assert');
 var fse = require('fs-extra');
@@ -14,7 +14,7 @@ try {
 }
 
 function runTest(name, options, next) {
-    var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
+    var rfs = RotatingFileStream(extend({}, { path: 'foo.log' }, options.stream));
 
     var log = bunyan.createLogger({
         name: 'foo',
@@ -32,7 +32,7 @@ function runTest(name, options, next) {
     });
 
     var i = 0;
-    var batch = _.extend({}, { size: 8 }, options.batch);
+    var batch = extend({}, { size: 8 }, options.batch);
 
     var ia = setInterval(function () {
         for (var j = 0; j < batch.size; j += 1) {

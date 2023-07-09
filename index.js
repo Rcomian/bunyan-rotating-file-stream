@@ -6,7 +6,7 @@ var PeriodTrigger = require('./lib/periodtrigger');
 var InitialPeriodTrigger = require('./lib/initialperiodtrigger');
 var ThresholdTrigger = require('./lib/thresholdtrigger');
 var TriggerAdapter = require('./lib/triggeradapter');
-var _ = require('lodash');
+var extend = require('lodash/extend');
 
 var path = require('path');
 
@@ -14,7 +14,7 @@ var existingFilesStreams = {};
 
 function RotatingFileStreamFactory(options) {
     // options_in might be readonly, copy so that we can modify as needed
-    var options_copy = _.extend({}, options);
+    var options_copy = extend({}, options);
 
     if (typeof (options_copy.path) !== 'string') {
         throw new Error('Must provide a string for path');

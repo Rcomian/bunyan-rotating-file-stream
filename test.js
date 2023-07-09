@@ -1,10 +1,10 @@
 var bunyan = require('bunyan');
 var RotatingFileStream = require('./index');
-var _ = require('lodash');
+var extend = require('lodash/extend');
 
 options = { stream: { path: 'testlogs/bar-%y-%m-%d-%H-%M-%S-%N.log', totalFiles: 10, threshold: '1m', fieldOrder: ['pid', 'time'] } }
 
-var rfs = RotatingFileStream(_.extend({}, { path: 'foo.log' }, options.stream));
+var rfs = RotatingFileStream(extend({}, { path: 'foo.log' }, options.stream));
 
 var log = bunyan.createLogger({
     name: 'foo',
