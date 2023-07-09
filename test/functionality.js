@@ -308,7 +308,7 @@ function gzippedfiles(template) {
             function (next) {
                 var files = fs.readdirSync(name);
                 assert.equal(6, files.length);
-                assert.equal(5, _(files).filter( function (f) { return f.slice(-3) === '.gz'; }).value().length);
+                assert.equal(5, files.filter( f => f.slice(-3) === '.gz' ).length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
@@ -334,7 +334,7 @@ function gzippedfilestotalfiles(template) {
             function (next) {
                 var files = fs.readdirSync(name);
                 assert.equal(5, files.length);
-                assert.equal(4, _(files).filter( function (f) { return f.slice(-3) === '.gz'; }).value().length);
+                assert.equal(4, files.filter( f => f.slice(-3) === '.gz').length);
                 console.log(name.replace('%d', '%%d'), 'passed');
                 next();
             },
