@@ -1,5 +1,9 @@
 # bunyan Changelog
 
+## 2.0.5
+
+- (Kevin Brown) Reduce the package's bundle size
+
 ## 2.0.4
 
 - (Kevin Brown) Make bunyan a peer dependency
