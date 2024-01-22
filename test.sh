@@ -3,7 +3,7 @@
 . ~/.nvm/nvm.sh
 . ~/.bashrc
 
-declare -a VERSIONS=("14" "15" "16" "18")
+declare -a VERSIONS=("14" "15" "16" "18" "20")
 
 if [ $# -eq 1 ]
 then
