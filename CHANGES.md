@@ -1,5 +1,11 @@
 # bunyan Changelog
 
+## 2.0.6
+
+- (rgembalik) Fix - add missing `var` keyword in [lib/datestampedfileops.js](lib/datestampedfileops.js)
+- (animatedboy) Bump semver to 7.5.4
+- Adding node v20 to test suite.
+
 ## 2.0.5
 
 - (Kevin Brown) Reduce the package's bundle size
@@ -76,6 +82,7 @@ All previous features are maintained and you should be able to use your existing
 Integration testing is still rudimentary in terms of technology, but the coverage has been massively improved, checking that no logs have been re-ordered or lost.
 
 ## 1.4.0
+
 - New feature to allow the user to specify the order the fields of the log records are written to the log file, this can make manual browsing of the files easier if you put the timestamp and other relevant information first.
 - Some clean ups and refactorings to try to remove some flags.
 
