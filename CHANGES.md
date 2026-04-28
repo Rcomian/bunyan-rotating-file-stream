@@ -1,5 +1,12 @@
 # bunyan Changelog
 
+## 2.0.7
+
+- Security bump for lodash
+- Security bump for uuid
+- Security bump for brace-expansion
+- Adding node v22, v24 & v25 to test suite.
+
 ## 2.0.6
 
 - (rgembalik) Fix - add missing `var` keyword in [lib/datestampedfileops.js](lib/datestampedfileops.js)

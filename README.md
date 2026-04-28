@@ -23,6 +23,11 @@ Bunyan Rotating File Stream is a stream component for the logging system "node b
 
 ## Recent changes
 
+### 2.0.7 Security and node support
+
+Bumping npm packages for security.
+Adding node v22, v24 & v25 to test suite.
+
 ### 2.0.6 Security and bundle fixing
 
 Bumping to semver v7.5.4 & fixing a missing `var` statement.
